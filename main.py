@@ -48,14 +48,14 @@ def generate_hardware_summary(input_file, output_file):
             out.write("-" * 40 + "\n")
 
 
-def generate_dev_info(input_file, output_file): #use ssid keyword in search
+def generate_dev_info(input_file, output_file): #use ssid keyword in git cosearch
     with open(output_file, 'a') as out:
         out.write("\n")
         out.write("=== FreeBSD Wi-Fi connection info ===\n\n")
         #start ifconfig subprocess
         cmd1 = "ifconfig | grep ssid"
         with open(output_file,"a") as file:
-            subprocess.run(cmd1, shell=True)
+            subprocess.run(cmd1, shell=True, stdout=out)
 
 
 
