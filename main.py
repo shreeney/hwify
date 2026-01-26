@@ -51,13 +51,14 @@ def generate_hardware_summary(input_file, output_file):
 def generate_dev_info(input_file, output_file): #use ssid keyword in git cosearch
     with open(output_file, 'a') as out:
         out.write("\n")
-        out.write("=== FreeBSD Wi-Fi connection info ===\n\n")
         #start ifconfig subprocess
         cmd1 = "ifconfig | grep ssid"
+        cmd2 = "ifconfig | grep in"
         with open(output_file,"a") as file:
             subprocess.run(cmd1, shell=True, stdout=out)
-
-
+            out.write("\n")
+            subprocess.run(cmd2, shell=True, stdout=out)
+            out.write("\n")
 
 generate_hardware_summary("/root/HW_PROBE/LATEST/hw.info/devices", "freebsd_compat.txt") #method for running the files on
 generate_dev_info("/root/HW_PROBE/LATEST/hw.info/logs/ifconfig", "freebsd_compat.txt")
