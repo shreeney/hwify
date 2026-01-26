@@ -3,7 +3,7 @@
 # Variables
 PYTHON    = python3
 SCRIPT    = main.py
-DUMP_FILE = hw.info.txz
+DUMP_FILE = hw.info.tgz
 HWPROBE   = hw-probe
 
 USER_ID   = $$(id -u -n)
@@ -23,11 +23,11 @@ check:
 probe:
 	@echo "Running probe for $(USER_ID)..."
 	@echo "============="
-	#su -m root -c "hw-probe -all -save . && chown -R $(USER_ID):$(GROUP_ID) ./*.txz"
+	#su -m root -c "hw-probe -all -save . && chown -R $(USER_ID):$(GROUP_ID) ./*.tgz"
 	@# Join lines with ';' and '\' so the variable 't' persists
 	t=$$(mktemp -d); \
 	su -m root -c "hw-probe -all -save $$t"; \
-	cp -R $$t/*.txz ./; \
+	cp -R $$t/*.tgz ./; \
 
 	@echo "============="
 
@@ -38,7 +38,7 @@ run: extract
 
 extract: probe
 	@echo "Extracting hardware dump..."
-	tar -xf *.txz
+	tar -xf *.tgz
 	@echo "Finished. Thank you for your contribution! whitelist"
 	rm -rf $$t
 .PHONY: all probe extract run
