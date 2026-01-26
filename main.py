@@ -1,4 +1,6 @@
+import os.path
 from collections import defaultdict #import defaultdict
+from pathlib import Path
 import subprocess
 #dictionary for all different categories of devices
 HARDWARE_MAP = {
@@ -10,7 +12,6 @@ HARDWARE_MAP = {
     "Bluetooth": ["bluetooth", "btusb"],
     "Ethernet": ["ethernet", "rtl8111"]
 }
-
 
 def generate_hardware_summary(input_file, output_file):
     found_details = defaultdict(list)
@@ -46,6 +47,7 @@ def generate_hardware_summary(input_file, output_file):
                     marker = " [!] " if "failed" in detail.lower() else "  - "
                     out.write(f"{marker}{detail}\n")
             out.write("-" * 40 + "\n")
+        out.write("\n\n=== FreeBSD Advanced Information ===\n\n")
 
 
 def generate_dev_info(input_file, output_file): #use ssid keyword in git cosearch
@@ -53,12 +55,15 @@ def generate_dev_info(input_file, output_file): #use ssid keyword in git cosearc
         out.write("\n")
         #start ifconfig subprocess
         cmd1 = "ifconfig | grep ssid"
-        cmd2 = "ifconfig | grep in"
+        cmd2 = "ifconfig | grep media"
         with open(output_file,"a") as file:
             subprocess.run(cmd1, shell=True, stdout=out)
             out.write("\n")
             subprocess.run(cmd2, shell=True, stdout=out)
             out.write("\n")
 
-generate_hardware_summary("/root/HW_PROBE/LATEST/hw.info/devices", "freebsd_compat.txt") #method for running the files on
-generate_dev_info("/root/HW_PROBE/LATEST/hw.info/logs/ifconfig", "freebsd_compat.txt")
+hardware_summary_path = os.path.expanduser("~/hwify/hw.info/devices")
+devices_path = os.path.expanduser("~/hwify/hw.info/logs/ifconfig")
+
+generate_hardware_summary(hardware_summary_path, "freebsd_compat.txt")
+generate_dev_info(devices_path, "freebsd_compat.txt")
