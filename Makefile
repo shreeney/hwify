@@ -21,9 +21,14 @@ check:
 	@echo "$(PYTHON) and $(HWPROBE) are available."
 
 probe:
-	@echo "Running probe and restoring ownership to $(USER_ID)..."
+	@echo "Running probe for $(USER_ID)..."
 	@echo "============="
-	su -m root -c "hw-probe -all -save . && chown -R $(USER_ID):$(GROUP_ID) ./*.txz ./HW_PROBE"
+	#su -m root -c "hw-probe -all -save . && chown -R $(USER_ID):$(GROUP_ID) ./*.txz"
+	@# Join lines with ';' and '\' so the variable 't' persists
+	t=$$(mktemp -d); \
+	su -m root -c "hw-probe -all -save $$t"; \
+	cp -R $$t/*.txz ./; \
+
 	@echo "============="
 
 
@@ -34,7 +39,8 @@ run: extract
 extract: probe
 	@echo "Extracting hardware dump..."
 	tar -xf *.txz
-
+	@echo "Finished. Thank you for your contribution! whitelist"
+	rm -rf $$t
 .PHONY: all probe extract run
 
 
