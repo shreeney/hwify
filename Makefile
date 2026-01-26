@@ -39,7 +39,7 @@ run: extract
 extract: probe
 	@echo "Extracting hardware dump..."
 	tar -xf *.tgz
-	@echo "Finished. Thank you for your contribution! whitelist"
+	@echo "Finished. Thank you for your contribution!"
 	rm -rf $$t
 .PHONY: all probe extract run
 
