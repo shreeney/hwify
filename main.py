@@ -1,13 +1,14 @@
-from collections import defaultdict
-
+from collections import defaultdict #import defaultdict
+import subprocess
+#dictionary for all different categories of devices
 HARDWARE_MAP = {
-    "Graphics": ["vga", "display", "nvidia", "intel graphics", "radeon"],
-    "Wi-Fi": ["wireless", "wlan", "802.11", "iwlwifi", "ath9k"],
+    "Graphics": ["i915", "display", "nvidia", "amdgpu", "radeon"],
+    "Wi-Fi": ["wireless", "wlan", "802.11", "iwlwifi", "ath9k","rtw88","rtw89","mt76", "ath11k", "iwm", "iwx"],
     "Audio": ["audio", "sound", "hda", "codec"],
     "Card Reader": ["card reader", "sdhc", "rtsx"],
     "Storage": ["sda", "nvme", "ssd"],
     "Bluetooth": ["bluetooth", "btusb"],
-    "Network": ["ethernet", "rtl8111"]
+    "Ethernet": ["ethernet", "rtl8111"]
 }
 
 
@@ -46,4 +47,17 @@ def generate_hardware_summary(input_file, output_file):
                     out.write(f"{marker}{detail}\n")
             out.write("-" * 40 + "\n")
 
-generate_hardware_summary("/root/HW_PROBE/LATEST/hw.info/devices", "freebsd_compat.txt")
+
+def generate_dev_info(input_file, output_file): #use ssid keyword in search
+    with open(output_file, 'a') as out:
+        out.write("\n")
+        out.write("=== FreeBSD Wi-Fi connection info ===\n\n")
+        #start ifconfig subprocess
+        cmd1 = "ifconfig | grep ssid"
+        with open(output_file,"a") as file:
+            subprocess.run(cmd1, shell=True)
+
+
+
+generate_hardware_summary("/root/HW_PROBE/LATEST/hw.info/devices", "freebsd_compat.txt") #method for running the files on
+generate_dev_info("/root/HW_PROBE/LATEST/hw.info/logs/ifconfig", "freebsd_compat.txt")
