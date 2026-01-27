@@ -1,4 +1,7 @@
 import os.path
+import re
+from datetime import datetime
+
 from collections import defaultdict #import defaultdict
 from pathlib import Path
 import subprocess
@@ -58,12 +61,25 @@ def generate_dev_info(input_file, output_file): #use ssid keyword in git cosearc
         cmd2 = "ifconfig | grep media"
         with open(output_file,"a") as file:
             subprocess.run(cmd1, shell=True, stdout=out)
-            out.write("\n")
             subprocess.run(cmd2, shell=True, stdout=out)
-            out.write("\n")
 
 hardware_summary_path = os.path.expanduser("~/hwify/hw.info/devices")
 devices_path = os.path.expanduser("~/hwify/hw.info/logs/ifconfig")
 
-generate_hardware_summary(hardware_summary_path, "freebsd_compat.txt")
-generate_dev_info(devices_path, "freebsd_compat.txt")
+
+#filename logic
+input_string = "kenv | grep smbios.system.product"
+filename_final  = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") #fallback filename for time stamp in case smbios is not present on the machine
+result = subprocess.run(input_string, capture_output=True, text=True)
+output_string = result.stdout
+filename = re.search('"([^"]*)"', output_string)
+
+if filename:
+    filename = filename.group(1)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+    filename_final = f"{filename}_{timestamp}"
+
+
+generate_hardware_summary(hardware_summary_path, filename_final)
+generate_dev_info(devices_path, filename_final)
