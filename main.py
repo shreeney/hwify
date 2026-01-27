@@ -70,7 +70,7 @@ devices_path = os.path.expanduser("~/hwify/hw.info/logs/ifconfig")
 #filename logic
 input_string = "kenv | grep smbios.system.product"
 filename_final  = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") #fallback filename for time stamp in case smbios is not present on the machine
-result = subprocess.run(input_string, capture_output=True, text=True)
+result = subprocess.run(input_string, capture_output=True, text=True, shell=True)
 output_string = result.stdout
 filename = re.search('"([^"]*)"', output_string)
 
