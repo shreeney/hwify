@@ -75,8 +75,6 @@ def generate_dev_info(input_file, output_file): #use ssid keyword in git cosearc
 
 hardware_summary_path = os.path.expanduser("~/hwify/hw.info/devices")
 devices_path = os.path.expanduser("~/hwify/hw.info/logs/ifconfig")
-
-
 #filename logic
 input_string = "kenv | grep smbios.system.product"
 filename_final  = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") #fallback filename for time stamp in case smbios is not present on the machine
