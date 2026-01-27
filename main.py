@@ -9,11 +9,11 @@ from pathlib import Path
 import subprocess
 #dictionary for all different categories of devices
 HARDWARE_MAP = {
-    "Graphics": ["i915", "display", "nvidia", "amdgpu", "radeon"],
+    "Graphics": ["i915", "display", "nvidia", "amdgpu", "radeon","intel"],
     "Wi-Fi": ["wireless", "wlan", "802.11", "iwlwifi", "ath9k","rtw88","rtw89","mt76", "ath11k", "iwm", "iwx"],
     "Audio": ["audio", "sound", "hda", "codec"],
     "Card Reader": ["card reader", "sdhc", "rtsx"],
-    "Storage": ["sda", "nvme", "ssd"],
+    "Storage": ["ada", "nvme", "ssd", "sata"],
     "Bluetooth": ["bluetooth", "btusb"],
     "Ethernet": ["ethernet", "rtl8111"]
 }
