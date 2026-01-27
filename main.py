@@ -1,6 +1,8 @@
-import os.path
+import os
 import re
 from datetime import datetime
+import shutil
+
 
 from collections import defaultdict #import defaultdict
 from pathlib import Path
@@ -62,6 +64,14 @@ def generate_dev_info(input_file, output_file): #use ssid keyword in git cosearc
         with open(output_file,"a") as file:
             subprocess.run(cmd1, shell=True, stdout=out)
             subprocess.run(cmd2, shell=True, stdout=out)
+    current_dir = Path(__file__).parent.absolute()
+
+    source = current_dir / output_file
+    target = current_dir / "test_results"
+
+    target.mkdir(parents=True, exist_ok=True)
+
+    shutil.move(str(source), str(target))
 
 hardware_summary_path = os.path.expanduser("~/hwify/hw.info/devices")
 devices_path = os.path.expanduser("~/hwify/hw.info/logs/ifconfig")
