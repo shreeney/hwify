@@ -59,11 +59,11 @@ def generate_dev_info(input_file, output_file): #use ssid keyword in git cosearc
     with open(output_file, 'a') as out:
         out.write("\n")
         #start ifconfig subprocess
-        cmd1 = "ifconfig | grep ssid"
-        cmd2 = "ifconfig | grep media"
-        with open(output_file,"a") as file:
-            subprocess.run(cmd1, shell=True, stdout=out)
-            subprocess.run(cmd2, shell=True, stdout=out)
+        cmd1 = f"cat {input_file} | grep ssid"
+        cmd2 = f"cat {input_file} | grep media"
+        subprocess.run(cmd1, shell=True, stdout=out)
+        subprocess.run(cmd2, shell=True, stdout=out)
+
     current_dir = Path(__file__).parent.absolute()
 
     source = current_dir / output_file
