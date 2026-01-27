@@ -78,7 +78,7 @@ if filename:
     filename = filename.group(1)
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    filename_final = f"{filename}_{timestamp}"
+    filename_final = f"{filename}_{timestamp}.txt"
 
 
 generate_hardware_summary(hardware_summary_path, filename_final)
