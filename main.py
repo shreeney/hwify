@@ -1,23 +1,32 @@
 import os
 import re
-from datetime import datetime
-import shutil
-from collections import deque
+#from datetime import datetime
+#import shutil
+#from collections import deque
 
-from pathlib import Path
-import subprocess
+#from pathlib import Path
+#import subprocess
 
 
-#def generate_hardware_summary(ifconfig, hw_probe, output):
-#    with open(output, "w") as out:
-#        out.write("=== FreeBSD Hardware Status Info ===\n\n")
+hw_probe_dump = os.path.expanduser("~/hwify/hw.info/devices")
+ifconfig_path = os.path.expanduser("~/hwify/hw.info/logs/ifconfig")
+pciconf_path = os.path.expanduser("~/hwify/hw.info/logs/pciconf")
+
+def generate_hardware_summary(ifconfig, hw_probe, output):
+    with open(output, "a") as out:
+        out.write("=== FreeBSD Hardware Status Info ===\n\n")
+        #Categories to test: Graphics, Wi-Fi, Audio, Card Reader
+        out.write("- Graphics:")
+        out.write(get_hw_status(hw_probe, output))
+
+
 
 
 def get_device(input_file, search_term, output_file):
 #Dynamic regex for finding the start of the string area
     subclass_pattern = re.compile(rf'subclass\s*=\s*{re.escape(search_term)}', re.IGNORECASE)
     class_pattern = re.compile(rf'class\s*=\s*{re.escape(search_term)}', re.IGNORECASE)
-    header_pattern = re.compile(r'\S+@pci\d+:')  # Matches "none0@pci0:..."
+    header_pattern = re.compile(r'\S+@pci\d+:')
 
     def search(target_pattern, label):
         found = False
@@ -42,6 +51,20 @@ def get_device(input_file, search_term, output_file):
 
     if not search(subclass_pattern, "subclass"):
         search(class_pattern, "class")
+
+def get_hw_status(probe_file, category_name):
+    statuses = ['works', 'failed', 'detected', 'limited', 'malfunc']
+    status_pattern = re.compile(rf"\b({'|'.join(statuses)})\b", re.IGNORECASE)
+    try:
+        with open(probe_file, 'r') as f:
+            for line in f:
+                if category_name.lower() in line.lower():
+                    match = status_pattern.search(line)
+                    if match:
+                        return match.group(1).lower() # Returns just the status string
+        return "not found"
+    except FileNotFoundError:
+        return "file error"
 
 # Example:
 
@@ -75,7 +98,6 @@ hw_probe_dump = os.path.expanduser("~/hwify/hw.info/devices")
 ifconfig_path = os.path.expanduser("~/hwify/hw.info/logs/ifconfig")
 pciconf_path = os.path.expanduser("~/hwify/hw.info/logs/pciconf")
 
-get_device(pciconf_path, 'vga', 'matches.txt')
 
 '''
 #generate file name
