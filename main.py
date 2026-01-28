@@ -12,11 +12,6 @@ import subprocess
 #    with open(output, "w") as out:
 #        out.write("=== FreeBSD Hardware Status Info ===\n\n")
 
-import re
-from collections import deque
-
-import re
-
 
 def get_device(input_file, search_term, output_file):
 #Dynamic regex for finding the start of the string area
