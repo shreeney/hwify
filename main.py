@@ -12,20 +12,43 @@ import subprocess
 #    with open(output, "w") as out:
 #        out.write("=== FreeBSD Hardware Status Info ===\n\n")
 
-def get_device(input_file, subclass_to_find, output_file):
-    pattern = re.compile(rf'subclass\s*=\s*{re.escape(subclass_to_find)}', re.IGNORECASE) #takes in subclass and creates the dynamic regex
-    context_buffer = deque(maxlen=5)
+import re
+from collections import deque
 
-    with open(input_file, 'r') as f_in, open(output_file, 'a') as f_out:
-        for line in f_in:
-            context_buffer.append(line)
-            if pattern.search(line):
-                f_out.write(f"--- Subclass: '{subclass_to_find}' ---\n")
-                f_out.writelines(context_buffer)
-                f_out.write("\n")  # Add extra space between separate matches
+import re
 
-                # Optional: clear buffer to prevent overlapping if devices are back-to-back
-                context_buffer.clear()
+
+def get_device(input_file, search_term, output_file):
+#Dynamic regex for finding the start of the string area
+    subclass_pattern = re.compile(rf'subclass\s*=\s*{re.escape(search_term)}', re.IGNORECASE)
+    class_pattern = re.compile(rf'class\s*=\s*{re.escape(search_term)}', re.IGNORECASE)
+    header_pattern = re.compile(r'\S+@pci\d+:')  # Matches "none0@pci0:..."
+
+    def search(target_pattern, label):
+        found = False
+        current_device_buffer = []
+
+        with open(input_file, 'r') as f_in:
+            for line in f_in:
+                #reset if needed
+                if header_pattern.search(line):
+                    current_device_buffer = [line]
+                else:
+                    current_device_buffer.append(line)
+
+                if target_pattern.search(line):
+                    with open(output_file, 'a') as f_out:
+                        f_out.write(f"--- Category: ({label}): '{search_term}' ---\n")
+                        f_out.writelines(current_device_buffer)
+                        f_out.write("\n")
+                    found = True
+                    current_device_buffer = []
+        return found
+
+    if not search(subclass_pattern, "subclass"):
+        search(class_pattern, "class")
+
+# Example:
 
 '''
 def generate_ifconfig_info(input_file, output_file): #use ssid keyword in git cosearch
