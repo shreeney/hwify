@@ -20,7 +20,7 @@ if filename:
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename_final = f"{filename}_{timestamp}.txt"
     #Regex to get only basic characters into the filename
-    step1 = re.sub(r'[^a-zA-Z0-9_\-\s]', '_', filename_final)
+    step1 = re.sub(r'[^a-zA-Z0-9_\-.\s]', '_', filename_final)
     filename_final = re.sub(r'\s+', '', step1)
 
 def get_device(input_file, search_term):
