@@ -11,75 +11,62 @@ hw_probe_dump = os.path.expanduser("~/hwify/hw.info/devices")
 ifconfig_path = os.path.expanduser("~/hwify/hw.info/logs/ifconfig")
 pciconf_path = os.path.expanduser("~/hwify/hw.info/logs/pciconf")
 
+
 def generate_hardware_summary(pciconf, hw_probe, output):
-    with open(output, "a") as out:
-        out.write("=== FreeBSD Hardware Status Info ===\n\n")
-        #Categories to test: Graphics, Wi-Fi, Audio, Card Reader, Ethernet, Bluetooth
+    # Mapping of Display Name : (PCIconf Keyword, HW_Probe Keyword)
+    categories = {
+        "Graphics": ("graphics", "graphics"),
+        "Networking": ("network", "network"),
+        "Audio": ("hda", "hda"),
+        "Storage Devices": ("mass storage", "storage")
+    }
 
-        out.write("- Graphics:")
-        graphics = get_device(pciconf, 'graphics', output)
+    with open(output, "w") as out:
+        out.write("=== FreeBSD Hardware Status Info ===\n")
+        out.write(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        out.write("=" * 36 + "\n\n")
 
-        if graphics is not None:
-            out.write(get_hw_status(hw_probe, 'graphics'))
-        else:
-            out.write("Not detected")
+        for label, (pci_key, probe_key) in categories.items():
+            pci_info = get_device(pciconf, pci_key)
+            status = get_hw_status(hw_probe, probe_key)
+            out.write(f"- {label}\n")
+            if pci_info:
+                out.write(f"  Status: {status.upper()}\n")
+                out.write("  Details:\n")
+                indented_info = "    " + pci_info.replace("\n", "\n    ").strip()
+                out.write(indented_info + "\n")
+            else:
+                out.write("  Status: NOT DETECTED\n")
 
-        out.write("\n")
-        out.write("- Networking")
-
-        network = get_device(pciconf, 'network', output)
-        if network is not None:
-            out.write(get_hw_status(hw_probe, 'network'))
-        else:
-            out.write("Not detected")
-
-        out.write("\n")
-        out.write("- Audio")
-
-        audio = get_device(pciconf, 'hda', output)
-        if audio is not None:
-            out.write(get_hw_status(hw_probe,'hda'))
-        else:
-            out.write("Not detected")
-
-        out.write("\n")
-        out.write("- Storage Devices")
-
-        storage = get_device(pciconf, 'mass storage', output)
-        if storage is not None:
-            out.write(get_hw_status(hw_probe, 'storage'))
-        else:
-            out.write("Not detected")
+            out.write("\n" + "-" * 20 + "\n\n")
 
 
-def get_device(input_file, search_term, output_file):
+def get_device(input_file, search_term):
+    """Returns the PCI block as a string if found, otherwise None."""
     subclass_pat = re.compile(rf'subclass\s*=\s*{re.escape(search_term)}', re.IGNORECASE)
     class_pat = re.compile(rf'class\s*=\s*{re.escape(search_term)}', re.IGNORECASE)
     header_pat = re.compile(r'\S+@pci\d+:')
 
     def scan(pattern):
-        found_in_scan = False
         buffer = []
-        with open(input_file, 'r') as f_in:
-            for line in f_in:
-                if header_pat.search(line):
-                    buffer = [line]
-                else:
-                    buffer.append(line)
+        try:
+            with open(input_file, 'r') as f_in:
+                for line in f_in:
+                    if header_pat.search(line):
+                        buffer = [line]
+                    else:
+                        buffer.append(line)
 
-                if pattern.search(line):
-                    with open(output_file, 'a') as f_out:
-                        f_out.writelines(buffer)
-                        f_out.write("\n")
-                    found_in_scan = True
-                    buffer = []
-        return found_in_scan
+                    if pattern.search(line):
+                        return "".join(buffer)
+        except FileNotFoundError:
+            return None
+        return None
 
-    found = scan(subclass_pat)
-    if not found:
-        found = scan(class_pat)
-
-    return found
+    final = scan(subclass_pat)
+    if not final:
+        final = scan(class_pat)
+    return final
 
 def get_hw_status(probe_file, category_name):
     statuses = ['works', 'failed', 'detected', 'limited', 'malfunc']
@@ -108,7 +95,7 @@ if filename:
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename_final = f"{filename}_{timestamp}.txt"
 
-generate_hardware_summary(ifconfig_path, hw_probe_dump, filename_final)
+generate_hardware_summary(pciconf_path, hw_probe_dump, filename_final)
 '''
 def generate_ifconfig_info(input_file, output_file): #use ssid keyword in git cosearch
     with open(output_file, 'a') as out:
