@@ -12,40 +12,13 @@ ifconfig_path = os.path.expanduser("~/hwify/hw.info/logs/ifconfig")
 pciconf_path = os.path.expanduser("~/hwify/hw.info/logs/pciconf")
 
 
-def generate_hardware_summary(pciconf, hw_probe, output):
-    categories = {
-        "Graphics": ("graphics", "graphics"),
-        "Networking": ("network", "network"),
-        "Audio": ("hda", "hda"),
-        "Storage Devices": ("mass storage", "storage")
-    }
-
-    with open(output, "w") as out:
-        out.write("=== FreeBSD Hardware Status Info ===\n")
-        out.write(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-        out.write("=" * 36 + "\n\n")
-
-        for label, (pci_key, probe_key) in categories.items():
-            pci_info = get_device(pciconf, pci_key)
-            status = get_hw_status(hw_probe, probe_key)
-            out.write(f"- {label}\n")
-            if pci_info:
-                out.write(f"  Status: {status.upper()}\n")
-                out.write("  Details:\n")
-                indented_info = "    " + pci_info.replace("\n", "\n    ").strip()
-                out.write(indented_info + "\n")
-            else:
-                out.write("  Status: NOT DETECTED\n")
-
-            out.write("\n" + "-" * 20 + "\n\n")
-
-
 def get_device(input_file, search_term):
     subclass_pat = re.compile(rf'subclass\s*=\s*{re.escape(search_term)}', re.IGNORECASE)
     class_pat = re.compile(rf'class\s*=\s*{re.escape(search_term)}', re.IGNORECASE)
     header_pat = re.compile(r'\S+@pci\d+:')
 
     def scan(pattern):
+        matches = []
         buffer = []
         try:
             with open(input_file, 'r') as f_in:
@@ -56,15 +29,52 @@ def get_device(input_file, search_term):
                         buffer.append(line)
 
                     if pattern.search(line):
-                        return "".join(buffer)
+                        matches.append("".join(buffer))
+                        buffer = []
         except FileNotFoundError:
-            return None
-        return None
+            return []
+        return matches
 
-    final = scan(subclass_pat)
-    if not final:
-        final = scan(class_pat)
-    return final
+    results = scan(subclass_pat)
+    if not results:
+        results = scan(class_pat)
+
+    return results
+
+
+def generate_hardware_summary(pciconf, hw_probe, output):
+    categories = {
+        "Graphics": ("graphics", "graphics"),
+        "Wi-Fi": ("wireless", "network"),
+        "Ethernet": ("ethernet", "network"),
+        "Audio": ("hda", "hda"),
+        "SSD": ("nvme", "storage"),
+        "Card Reader": ("sd host", "storage"),
+        "USB Ports": ("usb", "usb"),
+        "Bluetooth": ("bluetooth", "bluetooth")
+    }
+
+    with open(output, "w") as out:
+        out.write("=== FreeBSD Hardware Status Info ===\n\n")
+
+        for label, (pci_key, probe_key) in categories.items():
+
+            pci_blocks = get_device(pciconf, pci_key)
+            status = get_hw_status(hw_probe, probe_key)
+
+            out.write(f"- {label}\n")
+
+            if pci_blocks:
+                out.write(f"  Status: {status.upper()}\n")
+                for i, block in enumerate(pci_blocks, 1):
+                    prefix = f"  Device {i}:" if len(pci_blocks) > 1 else "  Details:"
+                    indented = "    " + block.replace("\n", "\n    ").strip()
+                    out.write(f"{prefix}\n{indented}\n")
+            else:
+                out.write("  Status: NOT DETECTED\n")
+
+            out.write("\n" + "-" * 20 + "\n\n")
+
 
 def get_hw_status(probe_file, category_name):
     statuses = ['works', 'failed', 'detected', 'limited', 'malfunc']
@@ -81,7 +91,6 @@ def get_hw_status(probe_file, category_name):
         return "file error"
 
 
-#filename
 input_string = "kenv | grep smbios.system.product"
 filename_final  = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") #fallback filename for time stamp in case smbios is not present on the machine
 result = subprocess.run(input_string, capture_output=True, text=True, shell=True)
@@ -92,35 +101,6 @@ if filename:
     filename = filename.group(1)
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename_final = f"{filename}_{timestamp}.txt"
-
-generate_hardware_summary(pciconf_path, hw_probe_dump, filename_final)
-'''
-def generate_ifconfig_info(input_file, output_file): #use ssid keyword in git cosearch
-    with open(output_file, 'a') as out:
-        out.write("\n")
-        #start ifconfig subprocess
-        cmd1 = f"cat {input_file} | grep ssid"
-        cmd2 = f"cat {input_file} | grep media"
-        out.write("\n")
-        subprocess.run(cmd1, shell=True, stdout=out)
-        subprocess.run(cmd2, shell=True, stdout=out)
-
-    current_dir = Path(__file__).parent.absolute()
-
-    source = current_dir / output_file
-    target = current_dir / "test_results"
-
-    target.mkdir(parents=True, exist_ok=True)
-
-    shutil.move(str(source), str(target))
-
-def generate_disk_info(input_file,output_file):
-    with open(output_file)
-
-'''
-
-
-
 
 #generate file name
 input_string = "kenv | grep smbios.system.product"
@@ -134,7 +114,4 @@ if filename:
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename_final = f"{filename}_{timestamp}.txt"
 
-#test new function
-
-#generate_hardware_summary(ifconfig_path, hw_probe_dump, filename_final)
-#generate_verbose_input(devices_path, filename_final)
+generate_hardware_summary(pciconf_path, hw_probe_dump, filename_final)
