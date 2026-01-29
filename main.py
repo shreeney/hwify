@@ -1,10 +1,6 @@
 import os
 import re
 from datetime import datetime
-#import shutil
-#from collections import deque
-
-#from pathlib import Path
 import subprocess
 
 hw_probe_dump = os.path.expanduser("~/hwify/hw.info/devices")
@@ -42,13 +38,13 @@ def get_device(input_file, search_term):
     return results
 
 
-def generate_hardware_summary(pciconf, hw_probe, output):
+def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
     categories = {
         #first entry is the pciconf name, second is hw-probe dict
         "Graphics": ("vga", "graphics card"),
         "Networking": ("network", "network"),
         "Audio": ("hda", "hda"),
-        "SSD": ("nvm", "storage"),
+        "Storage": ("mass storage", "storage"),
         "USB Ports": ("usb", "usb"),
         "Bluetooth": ("bluetooth", "bluetooth")
     }
@@ -73,6 +69,18 @@ def generate_hardware_summary(pciconf, hw_probe, output):
                 out.write("  Status: NOT DETECTED\n")
 
             out.write("\n" + "-" * 20 + "\n\n")
+        out.write("=== FreeBSD Detailed Status Info ==\n\n")
+
+        out.write("Kldstat output:")
+        kld_data = get_kldstat()
+        out.write(kld_data)
+        out.write("\n" + "="*36 + "\n")
+        out.write("Ifconfig detailed output:")
+        ifconfig_status = get_ifconfig_details(ifconfig)
+        out.write("- Active Connection Details:\n")
+        for detail in ifconfig_status:
+            out.write(f"    {detail}\n")
+        out.write("\n")
 
 
 def get_hw_status(probe_file, category_name):
@@ -89,6 +97,27 @@ def get_hw_status(probe_file, category_name):
     except FileNotFoundError:
         return "file error"
 
+def get_kldstat():
+    kldstat = subprocess.run(["kldstat"], capture_output=True, text=True)
+    return kldstat.stdout
+
+import re
+
+def get_ifconfig_details(input_file):
+
+    pattern = re.compile(r'ssid|media', re.IGNORECASE)
+    results = []
+
+    try:
+        with open(input_file, 'r') as f:
+            for line in f:
+                if pattern.search(line):
+                    results.append(line.strip())
+    except FileNotFoundError:
+        return ["Ifconfig file not found."]
+
+    return results if results else ["No Wi-fi info found."]
+
 
 input_string = "kenv | grep smbios.system.product"
 filename_final  = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") #fallback filename for time stamp in case smbios is not present on the machine
@@ -101,4 +130,4 @@ if filename:
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename_final = f"{filename}_{timestamp}.txt"
 
-generate_hardware_summary(pciconf_path, hw_probe_dump, filename_final)
+generate_hardware_summary(ifconfig_path,pciconf_path, hw_probe_dump, filename_final)
