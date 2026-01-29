@@ -44,10 +44,10 @@ def get_device(input_file, search_term):
 
 def generate_hardware_summary(pciconf, hw_probe, output):
     categories = {
-        "Graphics": ("vga", "vga"),
+        "Graphics": ("vga", "graphics card"),
         "Networking": ("network", "network"),
         "Audio": ("hda", "hda"),
-        "SSD": ("storage", "storage"),
+        "SSD": ("nvm", "storage"),
         "USB Ports": ("usb", "usb"),
         "Bluetooth": ("bluetooth", "bluetooth")
     }
