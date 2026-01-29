@@ -20,6 +20,8 @@ if filename:
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename_final = f"{filename}_{timestamp}.txt"
 
+filename_final.replace(' ', '_')
+
 def get_device(input_file, search_term):
     subclass_pat = re.compile(rf'subclass\s*=\s*{re.escape(search_term)}', re.IGNORECASE)
     class_pat = re.compile(rf'class\s*=\s*{re.escape(search_term)}', re.IGNORECASE)
@@ -96,7 +98,6 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
         #move file into the test results dir
         try:
             shutil.move(filename_final, os.path.join("test_results", filename_final))
-            print(f"Successfully moved {filename_final} to test_results/")
         except Exception as e:
             print(f"Failed to move file: {e}")
 
