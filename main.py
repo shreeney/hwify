@@ -13,7 +13,6 @@ pciconf_path = os.path.expanduser("~/hwify/hw.info/logs/pciconf")
 
 
 def generate_hardware_summary(pciconf, hw_probe, output):
-    # Mapping of Display Name : (PCIconf Keyword, HW_Probe Keyword)
     categories = {
         "Graphics": ("graphics", "graphics"),
         "Networking": ("network", "network"),
@@ -42,7 +41,6 @@ def generate_hardware_summary(pciconf, hw_probe, output):
 
 
 def get_device(input_file, search_term):
-    """Returns the PCI block as a string if found, otherwise None."""
     subclass_pat = re.compile(rf'subclass\s*=\s*{re.escape(search_term)}', re.IGNORECASE)
     class_pat = re.compile(rf'class\s*=\s*{re.escape(search_term)}', re.IGNORECASE)
     header_pat = re.compile(r'\S+@pci\d+:')
