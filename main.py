@@ -44,6 +44,7 @@ def get_device(input_file, search_term):
 
 def generate_hardware_summary(pciconf, hw_probe, output):
     categories = {
+        #first entry is the pciconf name, second is hw-probe dict
         "Graphics": ("vga", "graphics card"),
         "Networking": ("network", "network"),
         "Audio": ("hda", "hda"),
@@ -89,18 +90,6 @@ def get_hw_status(probe_file, category_name):
         return "file error"
 
 
-input_string = "kenv | grep smbios.system.product"
-filename_final  = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") #fallback filename for time stamp in case smbios is not present on the machine
-result = subprocess.run(input_string, capture_output=True, text=True, shell=True)
-output_string = result.stdout
-filename = re.search('"([^"]*)"', output_string)
-
-if filename:
-    filename = filename.group(1)
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename_final = f"{filename}_{timestamp}.txt"
-
-#generate file name
 input_string = "kenv | grep smbios.system.product"
 filename_final  = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") #fallback filename for time stamp in case smbios is not present on the machine
 result = subprocess.run(input_string, capture_output=True, text=True, shell=True)
