@@ -20,6 +20,8 @@ if filename:
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename_final = f"{filename}_{timestamp}.txt"
     filename_final = filename_final.replace(' ', '_')
+    filename_final = filename_final.replace('(', '_')
+    filename_final = filename_final.replace(')', '_')
 
 def get_device(input_file, search_term):
     subclass_pat = re.compile(rf'subclass\s*=\s*{re.escape(search_term)}', re.IGNORECASE)
