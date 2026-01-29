@@ -2,11 +2,23 @@ import os
 import re
 from datetime import datetime
 import subprocess
+import shutil
 
 hw_probe_dump = os.path.expanduser("~/hwify/hw.info/devices")
 ifconfig_path = os.path.expanduser("~/hwify/hw.info/logs/ifconfig")
 pciconf_path = os.path.expanduser("~/hwify/hw.info/logs/pciconf")
 
+
+input_string = "kenv | grep smbios.system.product"
+filename_final  = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") #fallback filename for time stamp in case smbios is not present on the machine
+result = subprocess.run(input_string, capture_output=True, text=True, shell=True)
+output_string = result.stdout
+filename = re.search('"([^"]*)"', output_string)
+
+if filename:
+    filename = filename.group(1)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename_final = f"{filename}_{timestamp}.txt"
 
 def get_device(input_file, search_term):
     subclass_pat = re.compile(rf'subclass\s*=\s*{re.escape(search_term)}', re.IGNORECASE)
@@ -81,6 +93,12 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
         for detail in ifconfig_status:
             out.write(f"    {detail}\n")
         out.write("\n")
+        #move file into the test results dir
+        try:
+            shutil.move(filename_final, os.path.join("test_results", filename_final))
+            print(f"Successfully moved {filename_final} to test_results/")
+        except Exception as e:
+            print(f"Failed to move file: {e}")
 
 
 def get_hw_status(probe_file, category_name):
@@ -101,8 +119,6 @@ def get_kldstat():
     kldstat = subprocess.run(["kldstat"], capture_output=True, text=True)
     return kldstat.stdout
 
-import re
-
 def get_ifconfig_details(input_file):
 
     pattern = re.compile(r'ssid|media', re.IGNORECASE)
@@ -117,17 +133,5 @@ def get_ifconfig_details(input_file):
         return ["Ifconfig file not found."]
 
     return results if results else ["No Wi-fi info found."]
-
-
-input_string = "kenv | grep smbios.system.product"
-filename_final  = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") #fallback filename for time stamp in case smbios is not present on the machine
-result = subprocess.run(input_string, capture_output=True, text=True, shell=True)
-output_string = result.stdout
-filename = re.search('"([^"]*)"', output_string)
-
-if filename:
-    filename = filename.group(1)
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename_final = f"{filename}_{timestamp}.txt"
 
 generate_hardware_summary(ifconfig_path,pciconf_path, hw_probe_dump, filename_final)
