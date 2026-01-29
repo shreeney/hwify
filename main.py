@@ -19,9 +19,9 @@ if filename:
     filename = filename.group(1)
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename_final = f"{filename}_{timestamp}.txt"
-    filename_final = filename_final.replace(' ', '_')
-    filename_final = filename_final.replace('(', '_')
-    filename_final = filename_final.replace(')', '_')
+    #Regex to get only basic characters into the filename
+    step1 = re.sub(r'[^a-zA-Z0-9_\-\s]', '_', filename_final)
+    filename_final = re.sub(r'\s+', '', step1)
 
 def get_device(input_file, search_term):
     subclass_pat = re.compile(rf'subclass\s*=\s*{re.escape(search_term)}', re.IGNORECASE)
