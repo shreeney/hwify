@@ -7,7 +7,7 @@ import shutil
 hw_probe_dump = os.path.expanduser("~/hwify/hw.info/devices")
 ifconfig_path = os.path.expanduser("~/hwify/hw.info/logs/ifconfig")
 pciconf_path = os.path.expanduser("~/hwify/hw.info/logs/pciconf")
-
+uname_path = os.path.expanduser("~/hwify/hw.info/logs/uname")
 
 input_string = "kenv | grep smbios.system.product"
 filename_final  = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") #fallback filename for time stamp in case smbios is not present on the machine
@@ -66,7 +66,8 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
 
     with open(output, "w") as out:
         out.write("=== FreeBSD Hardware Status Info ===\n\n")
-
+        out.write("Running: ")
+        out.write(get_uname_details())
         for label, (pci_key, probe_key) in categories.items():
 
             pci_blocks = get_device(pciconf, pci_key)
@@ -90,9 +91,9 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
         kld_data = get_kldstat()
         out.write(kld_data)
         out.write("\n" + "="*36 + "\n")
-        out.write("Ifconfig detailed output:")
+        out.write("ifconfig detailed output: ")
         ifconfig_status = get_ifconfig_details(ifconfig)
-        out.write("- Active Connection Details:\n")
+        out.write("- Active Connection Details: \n")
         for detail in ifconfig_status:
             out.write(f"    {detail}\n")
         out.write("\n")
@@ -101,6 +102,13 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
             shutil.move(filename_final, os.path.join("test_results", filename_final))
         except Exception as e:
             print(f"Failed to move file: {e}")
+        out.write("\n")
+
+        out.write("- CPU Info")
+        cpu_data = get_cpuinfo()
+        out.write(cpu_data)
+        out.write("\n" + "="*36 + "\n")
+
 
 
 def get_hw_status(probe_file, category_name):
@@ -117,9 +125,18 @@ def get_hw_status(probe_file, category_name):
     except FileNotFoundError:
         return "file error"
 
+def get_uname_details():
+    uname_file = open(uname_path, "r")
+    content = uname_file.read()
+    return content
+
 def get_kldstat():
     kldstat = subprocess.run(["kldstat"], capture_output=True, text=True)
     return kldstat.stdout
+
+def get_cpuinfo():
+    cpu = subprocess.run(["lscpu"], capture_output=True, text=True)
+    return cpu.stdout
 
 def get_ifconfig_details(input_file):
 
@@ -135,5 +152,7 @@ def get_ifconfig_details(input_file):
         return ["Ifconfig file not found."]
 
     return results if results else ["No Wi-fi info found."]
+
+
 
 generate_hardware_summary(ifconfig_path,pciconf_path, hw_probe_dump, filename_final)
