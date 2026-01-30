@@ -68,6 +68,7 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
         out.write("=== FreeBSD Hardware Status Info ===\n\n")
         out.write("Running: ")
         out.write(get_uname_details())
+        out.write("\n")
         for label, (pci_key, probe_key) in categories.items():
 
             pci_blocks = get_device(pciconf, pci_key)
@@ -105,6 +106,7 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
         out.write("\n")
 
         out.write("- CPU Info")
+        out.write("\n")
         cpu_data = get_cpuinfo()
         out.write(cpu_data)
         out.write("\n" + "="*36 + "\n")
