@@ -1,0 +1,156 @@
+=== FreeBSD Hardware Status Info ===
+
+Running: FreeBSD 16.0-CURRENT #0 drm-related-linuxkpi-changes-n282939-23f25f48cde7: Thu Jan 22 15:30:31 EST 2026     XXX@XXX:/usr/obj/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+- Graphics
+  Status: WORKS
+  Details:
+    vgapci0@pci0:193:0:0:	class=0x030000 rev=0xc4 hdr=0x00 vendor=0x1002 device=0x15bf subvendor=0xf111 subdevice=0x0006
+        vendor     = 'Advanced Micro Devices, Inc. [AMD/ATI]'
+        device     = 'Phoenix1'
+        class      = display
+        subclass   = VGA
+
+--------------------
+
+- Networking
+  Status: WORKS
+  Details:
+    iwlwifi0@pci0:1:0:0:	class=0x028000 rev=0x1a hdr=0x00 vendor=0x8086 device=0x2725 subvendor=0x8086 subdevice=0x0024
+        vendor     = 'Intel Corporation'
+        device     = 'Wi-Fi 6E(802.11ax) AX210/AX1675* 2x2 [Typhoon Peak]'
+        class      = network
+
+--------------------
+
+- Audio
+  Status: DETECTED
+  Device 1:
+    hdac0@pci0:193:0:1:	class=0x040300 rev=0x00 hdr=0x00 vendor=0x1002 device=0x1640 subvendor=0xf111 subdevice=0x0006
+        vendor     = 'Advanced Micro Devices, Inc. [AMD/ATI]'
+        device     = 'Radeon High Definition Audio Controller'
+        class      = multimedia
+        subclass   = HDA
+  Device 2:
+    hdac1@pci0:193:0:6:	class=0x040300 rev=0x00 hdr=0x00 vendor=0x1022 device=0x15e3 subvendor=0xf111 subdevice=0x0006
+        vendor     = 'Advanced Micro Devices, Inc. [AMD]'
+        device     = 'Ryzen HD Audio Controller'
+        class      = multimedia
+        subclass   = HDA
+
+--------------------
+
+- Storage
+  Status: DETECTED
+  Details:
+    nvme0@pci0:2:0:0:	class=0x010802 rev=0x01 hdr=0x00 vendor=0x15b7 device=0x5017 subvendor=0x15b7 subdevice=0x5017
+        vendor     = 'Sandisk Corp'
+        device     = 'WD SN560/SN740/SN770/SN5000 NVMe SSD'
+        class      = mass storage
+
+--------------------
+
+- USB Ports
+  Status: DETECTED
+  Device 1:
+    xhci0@pci0:193:0:3:	class=0x0c0330 rev=0x00 hdr=0x00 vendor=0x1022 device=0x15b9 subvendor=0xf111 subdevice=0x0006
+        vendor     = 'Advanced Micro Devices, Inc. [AMD]'
+        class      = serial bus
+        subclass   = USB
+  Device 2:
+    xhci1@pci0:193:0:4:	class=0x0c0330 rev=0x00 hdr=0x00 vendor=0x1022 device=0x15ba subvendor=0xf111 subdevice=0x0006
+        vendor     = 'Advanced Micro Devices, Inc. [AMD]'
+        class      = serial bus
+        subclass   = USB
+  Device 3:
+    xhci2@pci0:195:0:3:	class=0x0c0330 rev=0x00 hdr=0x00 vendor=0x1022 device=0x15c0 subvendor=0xf111 subdevice=0x0006
+        vendor     = 'Advanced Micro Devices, Inc. [AMD]'
+        class      = serial bus
+        subclass   = USB
+  Device 4:
+    xhci3@pci0:195:0:4:	class=0x0c0330 rev=0x00 hdr=0x00 vendor=0x1022 device=0x15c1 subvendor=0xf111 subdevice=0x0006
+        vendor     = 'Advanced Micro Devices, Inc. [AMD]'
+        class      = serial bus
+        subclass   = USB
+  Device 5:
+    none8@pci0:195:0:5:	class=0x0c0340 rev=0x00 hdr=0x00 vendor=0x1022 device=0x1668 subvendor=0xf111 subdevice=0x0006
+        vendor     = 'Advanced Micro Devices, Inc. [AMD]'
+        device     = 'Pink Sardine USB4/Thunderbolt NHI controller'
+        class      = serial bus
+        subclass   = USB
+  Device 6:
+    none9@pci0:195:0:6:	class=0x0c0340 rev=0x00 hdr=0x00 vendor=0x1022 device=0x1669 subvendor=0xf111 subdevice=0x0006
+        vendor     = 'Advanced Micro Devices, Inc. [AMD]'
+        device     = 'Pink Sardine USB4/Thunderbolt NHI controller'
+        class      = serial bus
+        subclass   = USB
+
+--------------------
+
+- Bluetooth
+  Status: NOT DETECTED
+
+--------------------
+
+=== FreeBSD Detailed Status Info ==
+
+Kldstat output:Id Refs Address                Size Name
+ 1  127 0xffffffff80200000  2127640 kernel
+ 2    1 0xffffffff82328000   7827e8 zfs.ko
+ 3    1 0xffffffff82aab000    1f1c0 geom_eli.ko
+ 4    1 0xffffffff84a00000   7e9d88 amdgpu.ko
+ 5    2 0xffffffff84928000    9618d drm.ko
+ 6    1 0xffffffff849bf000     22b8 iic.ko
+ 7    2 0xffffffff849c2000     4120 linuxkpi_video.ko
+ 8    3 0xffffffff849c7000     7368 dmabuf.ko
+ 9    3 0xffffffff849cf000     3378 lindebugfs.ko
+10    1 0xffffffff849d3000     c358 ttm.ko
+11    1 0xffffffff849e0000     5710 cuse.ko
+12    1 0xffffffff849e6000     3390 acpi_wmi.ko
+13    1 0xffffffff851ea000    cc520 if_iwlwifi.ko
+14    1 0xffffffff852b7000    181b0 if_iwx.ko
+15    1 0xffffffff849ea000     61d0 ig4.ko
+16    1 0xffffffff849f1000     3220 intpm.ko
+17    1 0xffffffff849f5000     2178 smbus.ko
+18    1 0xffffffff849f8000     58a0 ng_ubt.ko
+19    4 0xffffffff852d0000     bbb8 netgraph.ko
+20    3 0xffffffff852dc000     a330 ng_hci.ko
+21    2 0xffffffff852e7000     2670 ng_bluetooth.ko
+22    1 0xffffffff852ea000     3218 iichid.ko
+23    1 0xffffffff852ee000     21e8 hcons.ko
+24    2 0xffffffff852f1000     40a8 hidmap.ko
+25    1 0xffffffff852f6000     21e8 hms.ko
+26    1 0xffffffff852f9000     3355 hmt.ko
+27    1 0xffffffff852fd000     22cc hconf.ko
+28    1 0xffffffff85400000   345758 vmm.ko
+29    1 0xffffffff85300000     21dc nmdm.ko
+30    1 0xffffffff85303000     9950 if_bridge.ko
+31    1 0xffffffff8530d000     6120 bridgestp.ko
+32    1 0xffffffff85314000     2a80 mac_ntpd.ko
+33    1 0xffffffff85317000     2630 nlsysevent.ko
+
+====================================
+ifconfig detailed output: - Active Connection Details: 
+    ssid ... channel 153 (5765 MHz 11a vht/80-) bssid 1614BD9C7F1C387A45977BCB212E2320
+    media: IEEE 802.11 Wireless Ethernet VHT mode 11ac
+
+
+- CPU Info
+Architecture:            amd64
+Byte Order:              Little Endian
+Total CPU(s):            16
+Thread(s) per core:      2
+Core(s) per socket:      8
+Socket(s):               1
+Vendor:                  AuthenticAMD
+CPU family:              25
+Model:                   116
+Model name:              AMD Ryzen 7 7840U w/ Radeon  780M Graphics     
+Stepping:                1
+L1d cache:               32K
+L1i cache:               32K
+L2 cache:                1024K
+L3 cache:                16M
+Flags:                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 cflsh mmx fxsr sse sse2 htt sse3 pclmulqdq monitor ssse3 fma cx16 sse4_1 sse4_2 popcnt aes xsave osxsave avx f16c rdrnd syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm lahf_lm cmp_legacy svm extapic cr8_legacy lzcnt sse4a misalignsse 3dnowprefetch osvw ibs skinit wdt tce topoext perfctr_core perfctr_nb pcx_l2i
+
+====================================
