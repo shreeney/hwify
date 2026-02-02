@@ -63,7 +63,7 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
     categories = {
         #multiple aliases for devices are in pciconf, so have some logic to handle it
         "Graphics": (("vga", "display"), "graphics card"),
-        "Networking": (("network", "ethernet"), "network"),
+        "Networking": ("network", "network"),
         "Audio": (("hda", "multimedia"), "hda"),
         "Storage": ("mass storage", "storage"),
         "USB Ports": ("usb", "usb"),
