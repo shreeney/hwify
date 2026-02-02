@@ -25,38 +25,41 @@ if filename:
 
 
 def get_device(input_file, search_terms):
-    if isinstance(search_terms, str):
-        search_terms = [search_terms]
-#create combined regex to find multiple search terms under each file
+    if isinstance(search_terms, str): search_terms = [search_terms]
     combined_pattern = "|".join([re.escape(term) for term in search_terms])
 
     subclass_pat = re.compile(rf'subclass\s*=\s*({combined_pattern})', re.IGNORECASE)
     class_pat = re.compile(rf'class\s*=\s*({combined_pattern})', re.IGNORECASE)
+    # Regex to grab vendor/device ID like 0x10de:0x1c82
+    id_pat = re.compile(r'chip=0x([a-fA-F0-9]{4})([a-fA-F0-9]{4})')
     header_pat = re.compile(r'\S+@pci\d+:')
 
     def scan(pattern):
         matches = []
         buffer = []
+        current_id = None
         try:
             with open(input_file, 'r') as f_in:
                 for line in f_in:
                     if header_pat.search(line):
                         buffer = [line]
+                        current_id = None
                     else:
                         buffer.append(line)
 
+                    id_match = id_pat.search(line)
+                    if id_match:
+                        current_id = f"{id_match.group(1)}:{id_match.group(2)}".lower()
+
                     if pattern.search(line):
-                        matches.append("".join(buffer))
+                        matches.append(("".join(buffer), current_id))
                         buffer = []
         except FileNotFoundError:
             return []
         return matches
 
     results = scan(subclass_pat)
-    if not results:
-        results = scan(class_pat)
-
-    return results
+    return results if results else scan(class_pat)
 
 
 def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
@@ -76,19 +79,20 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
         out.write(get_uname_details())
         out.write("\n")
         for label, (pci_keys, probe_key) in categories.items():
-            pci_blocks = get_device(pciconf, pci_keys)
-            status = get_hw_status(hw_probe, probe_key)
+            pci_data = get_device(pciconf, pci_keys)
+
             out.write(f"- {label}\n")
-            #handle pciconf properly
-            if pci_blocks:
-                out.write(f"  Status: {status.upper()}\n")
-                for i, block in enumerate(pci_blocks, 1):
-                    prefix = f"  Device {i}:" if len(pci_blocks) > 1 else "  Details:"
+            if pci_data:
+                for i, (block, pci_id) in enumerate(pci_data, 1):
+                    status = get_hw_status(hw_probe, pci_id)
+
+                    prefix = f"  Device {i} [{pci_id}]:" if pci_id else f"  Device {i}:"
+                    out.write(f"{prefix} STATUS: {status}\n")
+
                     indented = "    " + block.replace("\n", "\n    ").strip()
-                    out.write(f"{prefix}\n{indented}\n")
+                    out.write(f"{indented}\n")
             else:
                 out.write("  Status: NOT DETECTED\n")
-
             out.write("\n" + "-" * 20 + "\n\n")
         out.write("=== FreeBSD Detailed Status Info ==\n\n")
 
@@ -114,19 +118,22 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
         out.write(cpu_data)
         out.write("\n" + "="*36 + "\n")
 
-def get_hw_status(probe_file, category_name):
+
+def get_hw_status(probe_file, pci_id):
+    if not pci_id: return "UNKNOWN"
     statuses = ['works', 'failed', 'detected', 'limited', 'malfunc']
     status_pattern = re.compile(rf"\b({'|'.join(statuses)})\b", re.IGNORECASE)
     try:
         with open(probe_file, 'r') as f:
             for line in f:
-                if category_name.lower() in line.lower():
+                if pci_id in line.lower():
                     match = status_pattern.search(line)
                     if match:
-                        return match.group(1).lower() # Returns just the status string
-        return "not found"
+                        return match.group(1).upper()
+        return "NOT FOUND"
     except FileNotFoundError:
-        return "file error"
+        return "ERROR"
+
 
 def get_uname_details():
     uname_file = open(uname_path, "r")
