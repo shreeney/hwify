@@ -75,13 +75,11 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
         out.write("Running: ")
         out.write(get_uname_details())
         out.write("\n")
-        for label, (pci_key, probe_key) in categories.items():
-
-            pci_blocks = get_device(pciconf, pci_key)
+        for label, (pci_keys, probe_key) in categories.items():
+            pci_blocks = get_device(pciconf, pci_keys)
             status = get_hw_status(hw_probe, probe_key)
-
             out.write(f"- {label}\n")
-
+            #handle pciconf properly
             if pci_blocks:
                 out.write(f"  Status: {status.upper()}\n")
                 for i, block in enumerate(pci_blocks, 1):
