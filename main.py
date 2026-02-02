@@ -23,9 +23,15 @@ if filename:
     step1 = re.sub(r'[^a-zA-Z0-9_\-.\s]', '_', filename_final)
     filename_final = re.sub(r'\s+', '', step1)
 
-def get_device(input_file, search_term):
-    subclass_pat = re.compile(rf'subclass\s*=\s*{re.escape(search_term)}', re.IGNORECASE)
-    class_pat = re.compile(rf'class\s*=\s*{re.escape(search_term)}', re.IGNORECASE)
+
+def get_device(input_file, search_terms):
+    if isinstance(search_terms, str):
+        search_terms = [search_terms]
+#create combined regex to find multiple search terms under each file
+    combined_pattern = "|".join([re.escape(term) for term in search_terms])
+
+    subclass_pat = re.compile(rf'subclass\s*=\s*({combined_pattern})', re.IGNORECASE)
+    class_pat = re.compile(rf'class\s*=\s*({combined_pattern})', re.IGNORECASE)
     header_pat = re.compile(r'\S+@pci\d+:')
 
     def scan(pattern):
@@ -55,10 +61,10 @@ def get_device(input_file, search_term):
 
 def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
     categories = {
-        #first entry is the pciconf name, second is hw-probe dict
-        "Graphics": ("vga", "graphics card"),
-        "Networking": ("network", "network"),
-        "Audio": ("hda", "hda"),
+        #multiple aliases for devices are in pciconf, so have some logic to handle it
+        "Graphics": (("vga", "display"), "graphics card"),
+        "Networking": (("network", "ethernet"), "network"),
+        "Audio": (("hda", "multimedia"), "hda"),
         "Storage": ("mass storage", "storage"),
         "USB Ports": ("usb", "usb"),
         "Bluetooth": ("bluetooth", "bluetooth")
@@ -104,14 +110,11 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
         except Exception as e:
             print(f"Failed to move file: {e}")
         out.write("\n")
-
         out.write("- CPU Info")
         out.write("\n")
         cpu_data = get_cpuinfo()
         out.write(cpu_data)
         out.write("\n" + "="*36 + "\n")
-
-
 
 def get_hw_status(probe_file, category_name):
     statuses = ['works', 'failed', 'detected', 'limited', 'malfunc']
@@ -154,7 +157,5 @@ def get_ifconfig_details(input_file):
         return ["Ifconfig file not found."]
 
     return results if results else ["No Wi-fi info found."]
-
-
 
 generate_hardware_summary(ifconfig_path,pciconf_path, hw_probe_dump, filename_final)

@@ -2,7 +2,7 @@
 
 PYTHON    = python3
 SCRIPT    = main.py
-DUMP_FILE = hw.info.tgz
+DUMP_FILE = hw-.info.tgz
 HWPROBE   = hw-probe
 USER_ID   = $$(id -u -n)
 GROUP_ID  = $$(id -g -n)
