@@ -3,6 +3,7 @@ import re
 from datetime import datetime
 import subprocess
 import shutil
+from typing import TextIO
 
 hw_probe_dump = os.path.expanduser("~/hwify/hw.info/devices")
 ifconfig_path = os.path.expanduser("~/hwify/hw.info/logs/ifconfig")
@@ -78,16 +79,18 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
         for label, (pci_key, probe_key) in categories.items():
 
             pci_blocks = get_device(pciconf, pci_key)
-            status = get_hw_status(hw_probe, probe_key)
-
             out.write(f"- {label}\n")
 
             if pci_blocks:
-                out.write(f"  Status: {status.upper()}\n")
                 for i, block in enumerate(pci_blocks, 1):
+                    status = get_hw_status(hw_probe, block)
+
                     prefix = f"  Device {i}:" if len(pci_blocks) > 1 else "  Details:"
                     indented = "    " + block.replace("\n", "\n    ").strip()
-                    out.write(f"{prefix}\n{indented}\n")
+
+                    out.write(f"{prefix}\n")
+                    out.write(f"    Status: {status.upper()}\n")
+                    out.write(f"{indented}\n")
             else:
                 out.write("  Status: NOT DETECTED\n")
 
@@ -116,17 +119,18 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
         out.write(cpu_data)
         out.write("\n" + "="*36 + "\n")
 
-def get_hw_status(probe_file, category_name):
+def get_hw_status(probe_file, device_block):
     statuses = ['works', 'failed', 'detected', 'limited', 'malfunc']
     status_pattern = re.compile(rf"\b({'|'.join(statuses)})\b", re.IGNORECASE)
+    key_line = device_block.splitlines()[0].strip().lower()
     try:
         with open(probe_file, 'r') as f:
             for line in f:
-                if category_name.lower() in line.lower():
+                if key_line in line.lower():
                     match = status_pattern.search(line)
                     if match:
-                        return match.group(1).lower() # Returns just the status string
-        return "not found"
+                        return match.group(1).lower()
+        return "unknown"
     except FileNotFoundError:
         return "file error"
 
