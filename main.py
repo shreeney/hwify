@@ -78,16 +78,20 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
         for label, (pci_key, probe_key) in categories.items():
 
             pci_blocks = get_device(pciconf, pci_key)
-            status = get_hw_status(hw_probe, probe_key)
+            probe_devices = get_hw_devices(hw_probe, probe_key)
 
             out.write(f"- {label}\n")
-
             if pci_blocks:
-                out.write(f"  Status: {status.upper()}\n")
                 for i, block in enumerate(pci_blocks, 1):
-                    prefix = f"  Device {i}:" if len(pci_blocks) > 1 else "  Details:"
+                    hw_status = (
+                        probe_devices[i - 1]["status"]
+                        if i - 1 < len(probe_devices)
+                        else "unknown"
+                    )
+
+                    out.write(f"  Device {i} Status: {hw_status.upper()}\n")
                     indented = "    " + block.replace("\n", "\n    ").strip()
-                    out.write(f"{prefix}\n{indented}\n")
+                    out.write(f"{indented}\n")
             else:
                 out.write("  Status: NOT DETECTED\n")
 
@@ -116,19 +120,26 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
         out.write(cpu_data)
         out.write("\n" + "="*36 + "\n")
 
-def get_hw_status(probe_file, category_name):
-    statuses = ['works', 'failed', 'detected', 'limited', 'malfunc']
-    status_pattern = re.compile(rf"\b({'|'.join(statuses)})\b", re.IGNORECASE)
+def get_hw_devices(probe_file, category_name):
+    devices = []
+    status_pattern = re.compile(r'\b(works|failed|detected|limited|malfunc)\b', re.IGNORECASE)
     try:
         with open(probe_file, 'r') as f:
             for line in f:
                 if category_name.lower() in line.lower():
-                    match = status_pattern.search(line)
-                    if match:
-                        return match.group(1).lower() # Returns just the status string
-        return "not found"
+                    status = "unknown"
+                    m = status_pattern.search(line)
+                    if m:
+                        status = m.group(1).lower()
+
+                    devices.append({
+                        "raw": line.strip(),
+                        "status": status
+                    })
     except FileNotFoundError:
-        return "file error"
+        pass
+    return devices
+
 
 def get_uname_details():
     uname_file = open(uname_path, "r")
