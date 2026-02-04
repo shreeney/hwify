@@ -29,15 +29,21 @@ run:
 	echo "Running script"; \
 	python "$$repodir/main.py" "$$tmpdir"; \
 	\
-	echo "Moving into test_results directory"; \
-	mkdir -p "$$repodir/test_results"; \
+	echo "Creating test_results subdirectory"; \
+	maker=`kenv | grep '^smbios.system.maker=' | cut -d'=' -f2 | tr -d '"' | tr '[:upper:]' '[:lower:]'`; \
+	if [ -z "$$maker" ]; then \
+		echo "Error: Could not determine system maker."; \
+		exit 1; \
+	fi; \
+	target_dir="$$repodir/test_results/$$maker"; \
+	mkdir -p "$$target_dir"; \
+	echo "Moving generated file into $$target_dir"; \
 	set -- "$$tmpdir"/*.txt; \
 	if [ -e "$$1" ]; then \
-		mv "$$@" "$$repodir/test_results/"; \
+		mv "$$@" "$$target_dir/"; \
 	else \
-		echo "Error"; \
+		echo "Error: No .txt file generated."; \
+		exit 1; \
 	fi; \
 	\
 	echo "Finished. Thank you for your contribution!"
-
-.PHONY: all run
