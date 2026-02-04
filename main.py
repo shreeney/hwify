@@ -1,10 +1,8 @@
 import sys
 from pathlib import Path
-import os
 import re
 from datetime import datetime
 import subprocess
-import shutil
 
 if len(sys.argv) >= 2:
     tmpdir = Path(sys.argv[1])
@@ -117,11 +115,6 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
         for detail in ifconfig_status:
             out.write(f"    {detail}\n")
         out.write("\n")
-        #move file into the test results dir
-        try:
-            shutil.move(filename_final, os.path.join("test_results", filename_final))
-        except Exception as e:
-            print(f"Failed to move file: {e}")
         out.write("\n")
         out.write("- CPU Info")
         out.write("\n")

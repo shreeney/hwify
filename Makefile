@@ -4,6 +4,7 @@ all: run
 
 run:
 	@set -e; \
+	\
 	repodir=`pwd`; \
 	echo "Repository directory: $$repodir"; \
 	\
@@ -21,12 +22,21 @@ run:
 	su -m root -c "hw-probe -all -save $$tmpdir"; \
 	echo "============="; \
 	\
-	echo "Extracting hardware dump..."; \
+	echo "Extracting file"; \
 	cd "$$tmpdir"; \
 	tar -xf *.tgz; \
 	\
-	echo "Running script..."; \
-	python "$$repodir/main.py" "$$tmpdir"
+	echo "Running script"; \
+	python "$$repodir/main.py" "$$tmpdir"; \
+	\
+	echo "Moving into test_results directory"; \
+	mkdir -p "$$repodir/test_results"; \
+	set -- "$$tmpdir"/*.txt; \
+	if [ -e "$$1" ]; then \
+		mv "$$@" "$$repodir/test_results/"; \
+	else \
+		echo "Error"; \
+	fi; \
 	\
 	echo "Finished. Thank you for your contribution!"
 
