@@ -7,9 +7,9 @@ import subprocess
 if len(sys.argv) >= 2:
     tmpdir = Path(sys.argv[1])
 else:
-    tmpdir = Path.home() / "hwify"
+    tmpdir = Path.home() / "hwify" #if user wants to run the script without a temp directory
 
-base_hwinfo = tmpdir / "hw.info" #to test homboth in dir and in the repo's temp directory
+base_hwinfo = tmpdir / "hw.info" #to test both in dir and in the repo's temp directory
 
 hw_probe_dump = base_hwinfo / "devices"
 ifconfig_path = base_hwinfo / "logs" / "ifconfig"
