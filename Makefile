@@ -4,6 +4,9 @@ all: run
 
 run:
 	@set -e; \
+	repodir=`pwd`; \
+	echo "Repository directory: $$repodir"; \
+	\
 	echo "Checking system for required applications"; \
 	command -v python >/dev/null 2>&1 || { echo "Error: python not found."; exit 1; }; \
 	command -v hw-probe >/dev/null 2>&1 || { echo "Error: hw-probe is not installed."; exit 1; }; \
@@ -11,7 +14,7 @@ run:
 	\
 	tmpdir=`mktemp -d /tmp/hwprobe.XXXXXX` || exit 1; \
 	trap 'rm -rf "$$tmpdir"' EXIT INT TERM; \
-	echo "Using tmp dir: $$tmpdir"; \
+	echo "Using temp directory: $$tmpdir"; \
 	\
 	echo "Running probe. Please enter your root password."; \
 	echo "============="; \
@@ -23,7 +26,7 @@ run:
 	tar -xf *.tgz; \
 	\
 	echo "Running script..."; \
-	python main.py; \
+	python "$$repodir/main.py"; \
 	\
 	echo "Finished. Thank you for your contribution!"
 
