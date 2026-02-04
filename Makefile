@@ -26,7 +26,7 @@ run:
 	tar -xf *.tgz; \
 	\
 	echo "Running script..."; \
-	python "$$repodir/main.py"; \
+	python "$$repodir/main.py" "$$tmpdir"
 	\
 	echo "Finished. Thank you for your contribution!"
 
