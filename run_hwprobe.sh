@@ -2,7 +2,7 @@
 
 set -e
 
-REPOi_DIR=$(pwd)
+REPO_DIR=$(pwd)
 TMPDIR=$(mktemp -d /tmp/hwprobe.XXXXXX) #posix temp directory format
 trap 'rm -rf "$TMPDIR"' EXIT INT TERM
 
