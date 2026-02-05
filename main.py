@@ -85,6 +85,7 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
         out.write(get_uname_details())
         out.write("\n")
         out.write("Hardware: ")
+        out.write("\n")
         out.write(filename)
         for label, (pci_key, probe_key) in categories.items():
 
