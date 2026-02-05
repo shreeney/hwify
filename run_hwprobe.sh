@@ -9,7 +9,7 @@ trap 'rm -rf "$TMPDIR"' EXIT INT TERM
 echo "Temporary directory: $TMPDIR"
 
 echo "Checking for required programs..."
-command -v python >/dev/null 2>&1 || { echo "Error: python not found."; exit 1; }
+command -v python >/dev/null 2>&1 || { echo "Error: python3 not found."; exit 1; }
 command -v hw-probe >/dev/null 2>&1 || { echo "Error: hw-probe not found."; exit 1; }
 command -v kenv >/dev/null 2>&1 || { echo "Error: kenv not found."; exit 1; }
 echo "All required programs are available."
@@ -23,12 +23,11 @@ for tgz in "$TMPDIR"/*.tgz; do
     tar -xf "$tgz" -C "$TMPDIR"
 done
 
-PYTHON_SCRIPT="$REPO_DIR/main.py"
 echo "Running script..."
-python "$PYTHON_SCRIPT" "$TMPDIR"
+cd "$TMPDIR"
+python "$REPO_DIR/main.py" "$TMPDIR"
 
 MAKER=$(kenv | grep '^smbios.system.maker=' | cut -d'=' -f2 | tr -d '"' | tr '[:upper:]' '[:lower:]')
-
 if [ -z "$MAKER" ]; then
     echo "Error: Could not determine system maker."
     exit 1
@@ -41,13 +40,11 @@ FOUND=0
 for f in "$TMPDIR"/*.txt; do
     if [ -e "$f" ]; then
         FOUND=1
-        break
+        mv "$f" "$TARGET_DIR/"
     fi
 done
 
-if [ "$FOUND" -eq 1 ]; then
-    mv "$TMPDIR"/*.txt "$TARGET_DIR/"
-else
+if [ "$FOUND" -eq 0 ]; then
     echo "Warning: No .txt files found to move."
 fi
 
