@@ -1,12 +1,20 @@
-h1 {
-  text-align: center;
+.site-header {
+    border-bottom: 4px solid #007acc; /* blue line */
+    padding: 16px;
 }
 
-p {
-  text-align: center;
+.logo-container {
+    display: flex;
+    align-items: center; 
+    gap: 12px;
 }
-table, th, td {
-  border: 1px solid;
-  border-collapse: collapse;
+
+.logo-container img {
+    height: 80px;
+}
+
+.logo-container h1 {
+    font-size: 1.8rem;
+    margin: 0; /* remove default h1 margin */
 }
 
