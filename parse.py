@@ -1,97 +1,95 @@
-import sys
 import re
-import os
+import sys
 
-def parse_hardware_dump(dump_text):
-    """
-    Parses hardware dump text into a dictionary of hardware categories and details.
-    """
+
+# Function to parse the hardware information
+def parse_hardware_status(file_path):
+    with open(file_path, 'r') as file:
+        hardware_info = file.read()
+
+    # Regular expressions to match device sections
+    section_pattern = re.compile(r"-\s([A-Za-z]+)")
+    device_pattern = re.compile(r"Device\s(\d+)\sStatus:\s(\w+).+device\s=\s'([^']+)'")
+    model_pattern = re.compile(r"Hardware:\s([A-Za-z0-9\s\(\)]+)")
+
     hardware_data = {}
-    current_category = None
+    current_section = None
+    current_model = None
 
-    lines = dump_text.strip().split('\n')
-    for line in lines:
-        line = line.strip()
+    # Find the laptop model
+    model_match = model_pattern.search(hardware_info)
+    if model_match:
+        current_model = model_match.group(1)
+        print(f"Found model: {current_model}")  # Debug: Check the found model
+    else:
+        print("Model not found in the file.")
+        return
 
-        if not line:
-            continue
+    # Initialize hardware categories
+    hardware_data[current_model] = {
+        'Graphics': [],
+        'Networking': [],
+        'Audio': [],
+        'Storage': [],
+        'USB Ports': [],
+        'Bluetooth': []
+    }
 
-        # Check for category headers (lines starting with -+ or a single word followed by :)
-        # Using a more robust regex for various header formats
-        category_match = re.match(r'^(-+\s)?([\w\s]+?):', line)
-        if category_match:
-            # Extract category name, convert to title case for consistency
-            current_category = category_match.group(2).strip().title()
-            # Normalize common category names
-            if current_category == 'Usb Ports':
-                current_category = 'USB Ports'
-            hardware_data[current_category] = {}
-        elif current_category:
-            # Extract key-value pairs within a category
-            kv_match = re.match(r'(\w+\s?\w*)\s*[=:](.*)', line)
-            if kv_match:
-                key = kv_match.group(1).strip().lower()
-                value = kv_match.group(2).strip()
-                hardware_data[current_category][key] = value
-            elif 'Status:' in line or 'Status :' in line:
-                # Special handling for "Device X Status: VALUE" lines
-                status_match = re.search(r'Status\s*:\s*(.*)', line)
-                if status_match:
-                    # Append status to the current device if possible
-                    last_device_key = sorted(hardware_data[current_category].keys())[-1] if hardware_data[current_category] else None
-                    if last_device_key and 'status' not in hardware_data[current_category][last_device_key].lower():
-                         hardware_data[current_category][last_device_key] += f" Status: {status_match.group(1).strip()}"
+    # Process each line to extract the device details
+    for line in hardware_info.splitlines():
+        # Match section headers (like Graphics, Networking, etc.)
+        section_match = section_pattern.match(line)
+        if section_match:
+            current_section = section_match.group(1)
+            print(f"Found section: {current_section}")  # Debug: Check section name
 
-    return hardware_data
+        # Match device details (device name and status)
+        device_match = device_pattern.match(line)
+        if device_match and current_section:
+            device_num = device_match.group(1)
+            status = device_match.group(2)
+            device_name = device_match.group(3)
 
-def generate_html_row(hardware_data):
-    """
-    Generates an HTML table row (<tr>) from the parsed hardware data.
-    """
-    html_output = "<tr>\n"
+            # Debug: Check if devices are being found
+            print(f"Found device: {device_name} Status: {status} in section: {current_section}")
 
-    # The first cell is the overall "Hardware name"
-    system_info = hardware_data.get('System', {}).get('hardware', 'Unknown System')
-    html_output += f"    <td>{system_info}</td>\n"
+            # Add the device to the correct category in the hardware data
+            if current_section in hardware_data[current_model]:
+                hardware_data[current_model][current_section].append((device_name, status))
 
-    # Define the preferred order, including Bluetooth.
-    # We dynamically check the keys present in hardware_data
-    preferred_order = ['Graphics', 'Networking', 'Audio', 'Storage', 'USB Ports', 'Bluetooth']
-    ordered_categories = [cat for cat in preferred_order if cat in hardware_data or cat in preferred_order]
+    # Generate HTML table
+    html_output = '<table border="1" cellpadding="5" cellspacing="0">'
+    html_output += '<tr><th>Model</th><th>Graphics</th><th>Networking</th><th>Audio</th><th>Storage</th><th>USB Ports</th><th>Bluetooth</th></tr>'
 
-    for category in ordered_categories:
-        cell_content = "N/A"
-        if category in hardware_data:
-            devices = hardware_data[category]
-            if devices:
-                # Get the most descriptive field for the device name
-                device_name_key = next((k for k in ['device', 'vendor'] if k in devices), None)
-                first_device_name = devices.get(device_name_key, 'Unknown Device')
-                # Find the status among all keys
-                first_device_status = next((v for k, v in devices.items() if 'status' in k.lower()), 'N/A')
-                cell_content = f"{first_device_name} ({first_device_status.strip()})"
+    # Prepare the data for each section in the table row
+    row = f'<tr><td>{current_model}</td>'
 
-        html_output += f"    <td>{cell_content}</td>\n"
+    # For each section (column), insert the devices and their status
+    for hw_section in ['Graphics', 'Networking', 'Audio', 'Storage', 'USB Ports', 'Bluetooth']:
+        row += f'<td>'
+        # For each device in the section, add the name and status
+        if hw_section in hardware_data[current_model]:
+            if hardware_data[current_model][hw_section]:  # Check if there are any devices
+                for device in hardware_data[current_model][hw_section]:
+                    row += f'{device[0]} ({device[1]})<br>'
+            else:
+                row += 'No devices found<br>'  # Debug: Handle empty sections
+        row += '</td>'
 
-    html_output += "</tr>"
-    return html_output
+    row += '</tr>'
+    html_output += row
 
+    html_output += '</table>'
+
+    # Print the HTML output to the standard output
+    print(html_output)
+
+
+# Main script execution
 if __name__ == "__main__":
-    hardware_dump_text = ""
-    file_path = None
+    if len(sys.argv) != 2:
+        print("Usage: python script.py <path_to_file>")
+        sys.exit(1)
 
-    if len(sys.argv) > 1:
-        file_path = sys.argv[1]
-        if os.path.exists(file_path):
-            with open(file_path, 'r') as f:
-                hardware_dump_text = f.read()
-        else:
-            print(f"Error: File not found at {file_path}", file=sys.stderr)
-            sys.exit(1)
-    elif not sys.stdin.isatty():
-        hardware_dump_text = sys.stdin.read()
-
-
-    parsed_data = parse_hardware_dump(hardware_dump_text)
-    html_row = generate_html_row(parsed_data)
-    print(html_row)
+    file_path = sys.argv[1]
+    parse_hardware_status(file_path)
