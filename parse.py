@@ -1,95 +1,80 @@
-import re
 import sys
+import re
+from html import escape
 
+COLUMNS = ["Graphics", "Networking", "Audio", "Storage", "USB Ports", "Bluetooth"]
 
-# Function to parse the hardware information
-def parse_hardware_status(file_path):
-    with open(file_path, 'r') as file:
-        hardware_info = file.read()
+def parse_file(path):
+    with open(path) as f:
+        lines = f.readlines()
 
-    # Regular expressions to match device sections
-    section_pattern = re.compile(r"-\s([A-Za-z]+)")
-    device_pattern = re.compile(r"Device\s(\d+)\sStatus:\s(\w+).+device\s=\s'([^']+)'")
-    model_pattern = re.compile(r"Hardware:\s([A-Za-z0-9\s\(\)]+)")
+    model = None
+    data = {c: [] for c in COLUMNS}
 
-    hardware_data = {}
     current_section = None
-    current_model = None
+    current_status = None
 
-    # Find the laptop model
-    model_match = model_pattern.search(hardware_info)
-    if model_match:
-        current_model = model_match.group(1)
-        print(f"Found model: {current_model}")  # Debug: Check the found model
-    else:
-        print("Model not found in the file.")
-        return
+    for line in lines:
+        line = line.rstrip()
 
-    # Initialize hardware categories
-    hardware_data[current_model] = {
-        'Graphics': [],
-        'Networking': [],
-        'Audio': [],
-        'Storage': [],
-        'USB Ports': [],
-        'Bluetooth': []
-    }
+        # Model
+        if line.startswith("Hardware:"):
+            model = line.split("Hardware:", 1)[1].strip()
+            continue
 
-    # Process each line to extract the device details
-    for line in hardware_info.splitlines():
-        # Match section headers (like Graphics, Networking, etc.)
-        section_match = section_pattern.match(line)
-        if section_match:
-            current_section = section_match.group(1)
-            print(f"Found section: {current_section}")  # Debug: Check section name
-
-        # Match device details (device name and status)
-        device_match = device_pattern.match(line)
-        if device_match and current_section:
-            device_num = device_match.group(1)
-            status = device_match.group(2)
-            device_name = device_match.group(3)
-
-            # Debug: Check if devices are being found
-            print(f"Found device: {device_name} Status: {status} in section: {current_section}")
-
-            # Add the device to the correct category in the hardware data
-            if current_section in hardware_data[current_model]:
-                hardware_data[current_model][current_section].append((device_name, status))
-
-    # Generate HTML table
-    html_output = '<table border="1" cellpadding="5" cellspacing="0">'
-    html_output += '<tr><th>Model</th><th>Graphics</th><th>Networking</th><th>Audio</th><th>Storage</th><th>USB Ports</th><th>Bluetooth</th></tr>'
-
-    # Prepare the data for each section in the table row
-    row = f'<tr><td>{current_model}</td>'
-
-    # For each section (column), insert the devices and their status
-    for hw_section in ['Graphics', 'Networking', 'Audio', 'Storage', 'USB Ports', 'Bluetooth']:
-        row += f'<td>'
-        # For each device in the section, add the name and status
-        if hw_section in hardware_data[current_model]:
-            if hardware_data[current_model][hw_section]:  # Check if there are any devices
-                for device in hardware_data[current_model][hw_section]:
-                    row += f'{device[0]} ({device[1]})<br>'
+        # Section headers (allow spaces)
+        m = re.match(r"-\s+(.+)", line)
+        if m:
+            section = m.group(1)
+            if section in data:
+                current_section = section
             else:
-                row += 'No devices found<br>'  # Debug: Handle empty sections
-        row += '</td>'
+                current_section = None
+            current_status = None
+            continue
 
-    row += '</tr>'
-    html_output += row
+        # Device status line
+        m = re.match(r"\s*Device \d+ Status:\s+(\w+)", line)
+        if m and current_section:
+            current_status = m.group(1)
+            continue
 
-    html_output += '</table>'
+        # Section-level status (Bluetooth)
+        m = re.match(r"\s*Status:\s+(.+)", line)
+        if m and current_section:
+            data[current_section].append(m.group(1))
+            continue
 
-    # Print the HTML output to the standard output
-    print(html_output)
+        # Device name line
+        m = re.match(r"\s*device\s+=\s+'(.+)'", line)
+        if m and current_section and current_status:
+            device = m.group(1)
+            data[current_section].append(f"{device} ({current_status})")
+            continue
+
+    return model, data
 
 
-# Main script execution
+def emit_html(model, data):
+    print("<table border='1'>")
+    print("<tr><th>Model</th>", end="")
+    for c in COLUMNS:
+        print(f"<th>{escape(c)}</th>", end="")
+    print("</tr>")
+
+    print(f"<tr><td>{escape(model)}</td>", end="")
+    for c in COLUMNS:
+        cell = "<br>".join(escape(x) for x in data[c]) or "&nbsp;"
+        print(f"<td>{cell}</td>", end="")
+    print("</tr>")
+
+    print("</table>")
+
+
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python script.py <path_to_file>")
+        print("usage: python hw_to_html.py <file>")
         sys.exit(1)
 
-    file_path = sys.argv[1]
-    parse_hardware_status(file_path)
+    model, data = parse_file(sys.argv[1])
+    emit_html(model, data)
