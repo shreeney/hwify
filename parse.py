@@ -39,7 +39,6 @@ def parse_hardware_status(path):
             if not line:
                 continue
 
-            # Extract the hardware name
             m = hardware_name_re.match(line)
             if m:
                 data['hardware_name'] = m.group(1)
@@ -78,7 +77,74 @@ def parse_hardware_status(path):
     return data
 
 
-parsed = parse_hardware_status(file_path)
+def generate_html_table(data):
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Laptop Compatibility Table</title>
+      <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+      <h1>Laptop Compatibility Information</h1>
+      <table id="compatibility-table">
+        <thead>
+          <tr>
+            <th>Hardware Name</th>
+            <th>Graphics</th>
+            <th>Networking</th>
+            <th>Audio</th>
+            <th>Storage</th>
+            <th>USB Ports</th>
+          </tr>
+        </thead>
+        <tbody>
+    """
 
-with open("hardware.json", "w") as file:
-    json.dump(parsed, file, indent=2)
+    html_content += f"""
+      <tr>
+        <td>{data['hardware_name']}</td>
+    """
+
+    categories = ["Graphics", "Networking", "Audio", "Storage", "USB Ports"]
+    for category in categories:
+        html_content += "<td>"
+        if category in data:
+            devices = data[category]
+            for device in devices:
+                device_info = f"{device['device']} ({device['status']})<br>"
+                device_info += f"Vendor: {device['vendor']}<br>"
+                device_info += f"Identifier: {device['identifier']}<br>"
+                device_info += f"Subvendor: {device['subvendor']}<br>"
+                device_info += f"Subdevice: {device['subdevice']}<br><hr>"
+                html_content += device_info
+        html_content += "</td>"
+
+    html_content += """
+        </tr>
+      </tbody>
+    </table>
+    </body>
+    </html>
+    """
+
+    return html_content
+
+
+# main function
+def main():
+    parsed = parse_hardware_status(file_path)
+
+    with open("hardware.json", "w") as file:
+        json.dump(parsed, file, indent=2)
+
+    html_content = generate_html_table(parsed)
+
+    with open("index.html", "w") as file:
+        file.write(html_content)
+
+
+if __name__ == "__main__":
+    main()
