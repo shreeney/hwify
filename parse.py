@@ -17,12 +17,10 @@ def parse_file(path):
     for line in lines:
         line = line.rstrip()
 
-        # Model
         if line.startswith("Hardware:"):
             model = line.split("Hardware:", 1)[1].strip()
             continue
 
-        # Section headers (allow spaces)
         m = re.match(r"-\s+(.+)", line)
         if m:
             section = m.group(1)
@@ -33,19 +31,16 @@ def parse_file(path):
             current_status = None
             continue
 
-        # Device status line
         m = re.match(r"\s*Device \d+ Status:\s+(\w+)", line)
         if m and current_section:
             current_status = m.group(1)
             continue
 
-        # Section-level status (Bluetooth)
         m = re.match(r"\s*Status:\s+(.+)", line)
         if m and current_section:
             data[current_section].append(m.group(1))
             continue
 
-        # Device name line
         m = re.match(r"\s*device\s+=\s+'(.+)'", line)
         if m and current_section and current_status:
             device = m.group(1)
