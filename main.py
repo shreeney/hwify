@@ -56,7 +56,6 @@ def get_hw_devices(probe_file, category_name):
     return devices
 
 
-#Helper functions for file reading need to take paths
 def read_file_content(path, default="Unknown"):
     try:
         with open(path, "r") as f:
@@ -76,7 +75,6 @@ def get_ifconfig_details(input_file):
     except FileNotFoundError:
         return ["Ifconfig file not found."]
     return results if results else ["No Wi-fi info found."]
-
 
 def generate_hardware_summary(paths, filename, output_filename):
     categories = {
@@ -136,7 +134,6 @@ def generate_hardware_summary(paths, filename, output_filename):
         out.write(cpu_data)
         out.write("\n" + "=" * 36 + "\n")
 
-
 def generate_html_summary(paths):
     categories = {
         "Graphics": (("vga", "display"), "graphics card"),
@@ -148,9 +145,6 @@ def generate_html_summary(paths):
     }
 
     html_output = "<tr>\n"
-    global system_product_name
-    system_name_display = system_product_name if system_product_name else "Detected Laptop"
-    html_output += f"  <td>{system_name_display}</td>\n"
 
     for label, (pci_key, probe_key) in categories.items():
         pci_blocks = get_device(paths['pciconf_path'], pci_key)
@@ -159,29 +153,21 @@ def generate_html_summary(paths):
         cell_content = []
         if pci_blocks:
             for i, block in enumerate(pci_blocks, 1):
-                hw_status_dict = (
-                    probe_devices[i - 1]
+                hw_status = (
+                    probe_devices[i - 1]["status"]
                     if i - 1 < len(probe_devices)
-                    else None
+                    else "unknown"
                 )
+                vendor_match = re.search(r"vendor\s*=\s*'([^']+)'", block)
+                device_match = re.search(r"device\s*=\s*'([^']+)'", block)
+                vendor_name = vendor_match.group(1) if vendor_match else "Unknown Vendor"
+                device_name = device_match.group(1) if device_match else "Unknown Device"
 
-                if hw_status_dict:
-                    description = hw_status_dict['raw'].strip()
-                    status_pattern = re.compile(r'\b(works|failed|detected|limited|malfunc)\b', re.IGNORECASE)
-                    description = status_pattern.sub('', description).strip()
-                    status = hw_status_dict['status'].upper()
-
-                    cell_content.append(f"{description} ({status})")
-                else:
-                    vendor_match = re.search(r"vendor\s*=\s*'([^']+)'", block)
-                    device_match = re.search(r"device\s*=\s*'([^']+)'", block)
-                    vendor_name = vendor_match.group(1) if vendor_match else "Unknown Vendor"
-                    device_name = device_match.group(1) if device_match else "Unknown Device"
-                    cell_content.append(f"{vendor_name} {device_name} (UNKNOWN)")
+                status_upper = hw_status.upper()
+                cell_content.append(f"{vendor_name} {device_name} ({status_upper})")
         else:
             cell_content.append(f"{label} (NOT DETECTED)")
 
-        #Create the table cell
         html_content = "<br>".join(cell_content)
         html_output += f"  <td>{html_content}</td>\n"
 
@@ -230,7 +216,7 @@ if __name__ == "__main__":
         step1 = re.sub(r'[^a-zA-Z0-9_\-.\s]', '_', temp_filename)
         filename_final = re.sub(r'\s+', '', step1)
     else:
-        system_product_name = None  # Ensure we pass None if not found
+        system_product_name = None  # Ensure None if not found
 
     if args.html:
         generate_html_summary(file_paths)
