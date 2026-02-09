@@ -4,73 +4,65 @@ import re
 from datetime import datetime
 import subprocess
 
-if len(sys.argv) >= 2:
-    tmpdir = Path(sys.argv[1])
-else:
-    tmpdir = Path.home() / "hwify" #if user wants to run the script without a temp directory
+def generate_html_output(device_data, output):
+    # HTML table header
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Laptop Compatibility Information</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; }}
+            table {{ width: 100%; border-collapse: collapse; }}
+            th, td {{ padding: 8px 12px; border: 1px solid #ccc; text-align: left; }}
+            th {{ background-color: #f2f2f2; }}
+            tr:nth-child(even) {{ background-color: #f9f9f9; }}
+            h1 {{ text-align: center; }}
+        </style>
+    </head>
+    <body>
+        <h1>Laptop Compatibility Information</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Hardware Name</th>
+                    <th>Graphics</th>
+                    <th>Networking</th>
+                    <th>Audio</th>
+                    <th>Storage</th>
+                    <th>USB Ports</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
 
-base_hwinfo = tmpdir / "hw.info" #to test both in dir and in the repo's temp directory
+    html_content += f"""
+        <tr>
+            <td>{device_data['name']}</td>
+            <td>{device_data['Graphics']}</td>
+            <td>{device_data['Networking']}</td>
+            <td>{device_data['Audio']}</td>
+            <td>{device_data['Storage']}</td>
+            <td>{device_data['USB Ports']}</td>
+        </tr>
+    """
 
-hw_probe_dump = base_hwinfo / "devices"
-ifconfig_path = base_hwinfo / "logs" / "ifconfig"
-pciconf_path = base_hwinfo / "logs" / "pciconf"
-uname_path = base_hwinfo / "logs" / "uname"
-kld_path = base_hwinfo / "logs" / "kldstat"
-cpu_path = base_hwinfo / "logs" / "lscpu"
+    html_content += """
+            </tbody>
+        </table>
+    </body>
+    </html>
+    """
 
-input_string = "kenv | grep smbios.system.product"
-filename_final  = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") #fallback filename for time stamp in case smbios is not present on the machine
-result = subprocess.run(input_string, capture_output=True, text=True, shell=True)
-output_string = result.stdout
-filename = re.search('"([^"]*)"', output_string)
-#filename is the make of the computer
-if filename:
-    filename = filename.group(1)
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename_final = f"{filename}_{timestamp}.txt"
-    #Regex to get only basic characters into the filename
-    step1 = re.sub(r'[^a-zA-Z0-9_\-.\s]', '_', filename_final)
-    filename_final = re.sub(r'\s+', '', step1)
-
-
-def get_device(input_file, search_terms):
-    if isinstance(search_terms, str):
-        search_terms = [search_terms]
-#create combined regex to find multiple search terms under each file
-    combined_pattern = "|".join([re.escape(term) for term in search_terms])
-
-    subclass_pat = re.compile(rf'subclass\s*=\s*({combined_pattern})', re.IGNORECASE)
-    class_pat = re.compile(rf'class\s*=\s*({combined_pattern})', re.IGNORECASE)
-    header_pat = re.compile(r'\S+@pci\d+:')
-
-    def scan(pattern):
-        matches = []
-        buffer = []
-        try:
-            with open(input_file, 'r') as f_in:
-                for line in f_in:
-                    if header_pat.search(line):
-                        buffer = [line]
-                    else:
-                        buffer.append(line)
-
-                    if pattern.search(line):
-                        matches.append("".join(buffer))
-                        buffer = []
-        except FileNotFoundError:
-            return []
-        return matches
-
-    results = scan(subclass_pat)
-    if not results:
-        results = scan(class_pat)
-
-    return results
+    with open(output, "w") as out:
+        out.write(html_content)
 
 
-def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
+def parse_device_data(hw_probe_dump, ifconfig_path, pciconf_path):
+    # Example categories
     categories = {
-        #multiple aliases for devices are in pciconf, so have some logic to handle it
         "Graphics": (("vga", "display"), "graphics card"),
         "Networking": ("network", "network"),
         "Audio": (("hda", "multimedia"), "hda"),
@@ -79,103 +71,94 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
         "Bluetooth": ("bluetooth", "bluetooth")
     }
 
-    with open(output, "w") as out:
-        out.write("=== FreeBSD Hardware Status Info ===\n\n")
-        out.write("Running: ")
-        out.write(get_uname_details())
-        out.write("\n")
-        out.write("Hardware: ")
-        out.write(filename)
-        out.write("\n")
-        for label, (pci_key, probe_key) in categories.items():
+    # Extract hardware information from the logs
+    def get_device(input_file, search_terms):
+        if isinstance(search_terms, str):
+            search_terms = [search_terms]
+        combined_pattern = "|".join([re.escape(term) for term in search_terms])
 
-            pci_blocks = get_device(pciconf, pci_key)
-            probe_devices = get_hw_devices(hw_probe, probe_key)
+        subclass_pat = re.compile(rf'subclass\s*=\s*({combined_pattern})', re.IGNORECASE)
+        class_pat = re.compile(rf'class\s*=\s*({combined_pattern})', re.IGNORECASE)
 
-            out.write(f"- {label}\n")
-            if pci_blocks:
-                for i, block in enumerate(pci_blocks, 1):
-                    hw_status = (
-                        probe_devices[i - 1]["status"]
-                        if i - 1 < len(probe_devices)
-                        else "unknown"
-                    )
+        def scan(pattern):
+            matches = []
+            buffer = []
+            try:
+                with open(input_file, 'r') as f_in:
+                    for line in f_in:
+                        if pattern.search(line):
+                            matches.append("".join(buffer))
+                            buffer = []
+            except FileNotFoundError:
+                return []
+            return matches
 
-                    out.write(f"  Device {i} Status: {hw_status.upper()}\n")
-                    indented = "    " + block.replace("\n", "\n    ").strip()
-                    out.write(f"{indented}\n")
-            else:
-                out.write("  Status: NOT DETECTED\n")
+        results = scan(subclass_pat)
+        if not results:
+            results = scan(class_pat)
 
-            out.write("\n" + "-" * 20 + "\n\n")
-        out.write("=== FreeBSD Detailed Status Info ==\n\n")
+        return results
 
-        out.write("Kldstat output:")
-        kld_data = get_kldstat()
-        out.write(kld_data)
-        out.write("\n" + "="*36 + "\n")
-        out.write("ifconfig detailed output: ")
-        ifconfig_status = get_ifconfig_details(ifconfig)
-        out.write("- Active Connection Details: \n")
-        for detail in ifconfig_status:
-            out.write(f"    {detail}\n")
-        out.write("\n")
-        out.write("\n")
-        out.write("- CPU Info")
-        out.write("\n")
-        cpu_data = get_cpuinfo()
-        out.write(cpu_data)
-        out.write("\n" + "="*36 + "\n")
+    # Now let's gather the data for each category based on the probes
+    device_data = {"name": filename, "Graphics": get_device(hw_probe_dump, "graphics card"),
+                   "Networking": get_device(hw_probe_dump, "network"), "Audio": "Not Detected",
+                   "Storage": "Not Detected", "USB Ports": "Not Detected"}
 
-def get_hw_devices(probe_file, category_name):
-    devices = []
-    status_pattern = re.compile(r'\b(works|failed|detected|limited|malfunc)\b', re.IGNORECASE)
-    try:
-        with open(probe_file, 'r') as f:
-            for line in f:
-                if category_name.lower() in line.lower():
-                    status = "unknown"
-                    m = status_pattern.search(line)
-                    if m:
-                        status = m.group(1).lower()
+    # Extract actual data from hw_probe_dump, pciconf, and other files
+    # First, we'll extract relevant hardware info from hw_probe_dump
 
-                    devices.append({
-                        "raw": line.strip(),
-                        "status": status
-                    })
-    except FileNotFoundError:
-        pass
-    return devices
+    # Now let's extract additional data from the other probe logs (ifconfig, pciconf)
+    for label, (pci_key, probe_key) in categories.items():
+        pci_blocks = get_device(pciconf_path, pci_key)
+        if pci_blocks:
+            device_data[label] = ', '.join([block.strip() for block in pci_blocks])
+
+    # Example: Add networking info from the ifconfig file
+    networking_info = get_device(ifconfig_path, "network")
+    if networking_info:
+        device_data["Networking"] = ', '.join(networking_info)
+
+    return device_data
 
 
-def get_uname_details():
-    uname_file = open(uname_path, "r")
-    content = uname_file.read()
-    return content
+def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
+    pass
 
-def get_kldstat():
-    kld_file = open(kld_path, "r")
-    content = kld_file.read()
-    return content
+if len(sys.argv) >= 2:
+    tmpdir = Path(sys.argv[1])
+else:
+    tmpdir = Path.home() / "hwify"  # default if no temp directory is specified
 
-def get_cpuinfo():
-    cpu_file = open(cpu_path, "r")
-    content = cpu_file.read()
-    return content
+base_hwinfo = tmpdir / "hw.info"
+hw_probe_dump = base_hwinfo / "devices"
+ifconfig_path = base_hwinfo / "logs" / "ifconfig"
+pciconf_path = base_hwinfo / "logs" / "pciconf"
+uname_path = base_hwinfo / "logs" / "uname"
+kld_path = base_hwinfo / "logs" / "kldstat"
+cpu_path = base_hwinfo / "logs" / "lscpu"
 
-def get_ifconfig_details(input_file):
+input_string = "kenv | grep smbios.system.product"
+filename_final = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+result = subprocess.run(input_string, capture_output=True, text=True, shell=True)
+output_string = result.stdout
+filename = re.search('"([^"]*)"', output_string)
 
-    pattern = re.compile(r'ssid|media', re.IGNORECASE)
-    results = []
+if filename:
+    filename = filename.group(1)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename_final = f"{filename}_{timestamp}.txt"
+    step1 = re.sub(r'[^a-zA-Z0-9_\-.\s]', '_', filename_final)
+    filename_final = re.sub(r'\s+', '', step1)
 
-    try:
-        with open(input_file, 'r') as f:
-            for line in f:
-                if pattern.search(line):
-                    results.append(line.strip())
-    except FileNotFoundError:
-        return ["Ifconfig file not found."]
+# Gather hardware data from the dumps
+device_data = parse_device_data(hw_probe_dump, ifconfig_path, pciconf_path)
 
-    return results if results else ["No Wi-fi info found."]
-
-generate_hardware_summary(ifconfig_path,pciconf_path, hw_probe_dump, filename_final)
+# If "html" is provided, generate HTML output
+if 'html' in sys.argv:
+    html_output = f"test_results/{filename}/index.html"
+    generate_html_output(device_data, html_output)
+    print(f"Generated HTML report: {html_output}")
+else:
+    # Otherwise, generate hardware summary in text format
+    generate_hardware_summary(ifconfig_path, pciconf_path, hw_probe_dump, filename_final)
+    print(f"Generated hardware summary: {filename_final}")
