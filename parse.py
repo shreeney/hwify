@@ -3,7 +3,7 @@ import re
 import argparse
 from pathlib import Path
 
-#logic for taking in cmd line params
+# logic for taking in cmd line params
 parser = argparse.ArgumentParser(description="Hw-probe file")
 parser.add_argument(
     "filepath",
@@ -23,9 +23,11 @@ print(f"Reading file at: {file_path}")
 
 
 def parse_hardware_status(path):
-    data = {} #empty dict
+    data = {}  # empty dict
     current_section = None
     current_device = None
+
+    hardware_name_re = re.compile(r"Hardware:\s*(.*)")
 
     device_header_re = re.compile(r"Device (\d+) Status: (\w+)")
     key_value_re = re.compile(r"(\w+)\s*=\s*'?(.*?)'?$")
@@ -35,6 +37,12 @@ def parse_hardware_status(path):
             line = raw_line.strip()
 
             if not line:
+                continue
+
+            # Extract the hardware name
+            m = hardware_name_re.match(line)
+            if m:
+                data['hardware_name'] = m.group(1)
                 continue
 
             if line.startswith("- "):
@@ -68,6 +76,7 @@ def parse_hardware_status(path):
                 continue
 
     return data
+
 
 parsed = parse_hardware_status(file_path)
 
