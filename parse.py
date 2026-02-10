@@ -49,7 +49,6 @@ def parse_file(path):
 
     return model, data
 
-
 def emit_html(model, data):
     print(f"<tr><td>{escape(model)}</td>", end="")
     for c in COLUMNS:

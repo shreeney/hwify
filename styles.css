@@ -18,3 +18,49 @@
     margin: 0; /* remove default h1 margin */
 }
 
+/* Ensure the page takes up the full height of the screen */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1; /* This grows to fill all space, pushing footer down */
+}
+
+.horizontal-footer {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+    border-top: 1px solid #ccc;
+}
+
+table {
+    width: 90%;
+    max-width: 2300px;
+    margin: 40px auto;
+    border-collapse: collapse;
+    font-family: sans-serif;
+}
+
+th, td {
+    padding: 15px 20px;
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+tr:nth-child(even) {
+    background-color: #fafafa;
+}
