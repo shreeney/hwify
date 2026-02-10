@@ -124,7 +124,7 @@ def generate_hardware_summary(pciconf, hw_probe, output):
 
             out.write("\n" + "-" * 20 + "\n\n")
         out.write("=== FreeBSD Detailed Status Info ==\n\n")
-        out.write("Kldstat output:")
+        out.write("Currently loaded kernel modules:")
         kld_data = get_kldstat()
         out.write(kld_data)
         out.write("\n" + "=" * 36 + "\n")
@@ -164,9 +164,13 @@ def get_uname_details():
 
 
 def get_kldstat():
-    kld_file = open(kld_path, "r")
-    content = kld_file.read()
-    return content
+    module_names = []
+    with open(kld_path, "r") as kld_file:
+        for line in kld_file:
+            columns = line.split()
+            if columns and columns[-1].endswith(".ko"): # get only .ko extension files.
+                module_names.append(columns[-1])
+    return "\n".join(module_names)
 
 
 def get_cpuinfo():
