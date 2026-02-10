@@ -12,7 +12,6 @@ else:
 base_hwinfo = tmpdir / "hw.info"  # to test both in dir and in the repo's temp directory
 
 hw_probe_dump = base_hwinfo / "devices"
-ifconfig_path = base_hwinfo / "logs" / "ifconfig"
 pciconf_path = base_hwinfo / "logs" / "pciconf"
 uname_path = base_hwinfo / "logs" / "uname"
 kld_path = base_hwinfo / "logs" / "kldstat"
@@ -69,7 +68,7 @@ def get_device(input_file, search_terms):
     return results
 
 
-def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
+def generate_hardware_summary(pciconf, hw_probe, output):
     categories = {
         "Graphics": (("vga", "display"), "graphics card"),
         "Networking": ("network", "network"),
@@ -129,12 +128,6 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
         kld_data = get_kldstat()
         out.write(kld_data)
         out.write("\n" + "=" * 36 + "\n")
-        out.write("ifconfig detailed output: ")
-        ifconfig_status = get_ifconfig_details(ifconfig)
-        out.write("- Active Connection Details: \n")
-        for detail in ifconfig_status:
-            out.write(f"    {detail}\n")
-        out.write("\n")
         out.write("\n")
         out.write("- CPU Info")
         out.write("\n")
@@ -182,19 +175,4 @@ def get_cpuinfo():
     return content
 
 
-def get_ifconfig_details(input_file):
-    pattern = re.compile(r'ssid|media', re.IGNORECASE)
-    results = []
-
-    try:
-        with open(input_file, 'r') as f:
-            for line in f:
-                if pattern.search(line):
-                    results.append(line.strip())
-    except FileNotFoundError:
-        return ["Ifconfig file not found."]
-
-    return results if results else ["No Wi-fi info found."]
-
-
-generate_hardware_summary(ifconfig_path, pciconf_path, hw_probe_dump, filename_final)
+generate_hardware_summary(pciconf_path, hw_probe_dump, filename_final)
