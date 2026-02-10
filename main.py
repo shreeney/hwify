@@ -125,23 +125,23 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
 
             out.write("\n" + "-" * 20 + "\n\n")
         out.write("=== FreeBSD Detailed Status Info ==\n\n")
+        out.write("Kldstat output:")
+        kld_data = get_kldstat()
+        out.write(kld_data)
+        out.write("\n" + "=" * 36 + "\n")
+        out.write("ifconfig detailed output: ")
+        ifconfig_status = get_ifconfig_details(ifconfig)
+        out.write("- Active Connection Details: \n")
+        for detail in ifconfig_status:
+            out.write(f"    {detail}\n")
+        out.write("\n")
+        out.write("\n")
+        out.write("- CPU Info")
+        out.write("\n")
+        cpu_data = get_cpuinfo()
+        out.write(cpu_data)
+        out.write("\n" + "=" * 36 + "\n")
 
-    out.write("Kldstat output:")
-    kld_data = get_kldstat()
-    out.write(kld_data)
-    out.write("\n" + "=" * 36 + "\n")
-    out.write("ifconfig detailed output: ")
-    ifconfig_status = get_ifconfig_details(ifconfig)
-    out.write("- Active Connection Details: \n")
-    for detail in ifconfig_status:
-        out.write(f"    {detail}\n")
-    out.write("\n")
-    out.write("\n")
-    out.write("- CPU Info")
-    out.write("\n")
-    cpu_data = get_cpuinfo()
-    out.write(cpu_data)
-    out.write("\n" + "=" * 36 + "\n")
 
 
 def get_hw_devices(probe_file, category_name):
