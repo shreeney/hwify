@@ -56,7 +56,6 @@ def emit_html(model, data):
         print(f"<td>{cell}</td>", end="")
     print("</tr>")
 
-
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("usage: python hw_to_html.py <file>")
