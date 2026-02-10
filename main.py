@@ -95,7 +95,7 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
                     break
 
         if is_working:
-            total_score += 10
+            total_score += 5
 
         category_results[label] = (pci_blocks, probe_devices)
 
@@ -104,7 +104,7 @@ def generate_hardware_summary(ifconfig, pciconf, hw_probe, output):
         out.write(f"Running: {get_uname_details().strip()}\n")
         out.write(f"Hardware: {filename}\n")
 
-        out.write(f"Ranking: {total_score}/60\n")
+        out.write(f"Ranking: {total_score}/30\n")
         out.write("-" * 36 + "\n\n")
 
         for label, (pci_blocks, probe_devices) in category_results.items():
