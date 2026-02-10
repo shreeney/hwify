@@ -125,6 +125,7 @@ def generate_hardware_summary(pciconf, hw_probe, output):
             out.write("\n" + "-" * 20 + "\n\n")
         out.write("=== FreeBSD Detailed Status Info ==\n\n")
         out.write("Currently loaded kernel modules:")
+        out.write("\n")
         kld_data = get_kldstat()
         out.write(kld_data)
         out.write("\n" + "=" * 36 + "\n")
