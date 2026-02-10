@@ -51,19 +51,11 @@ def parse_file(path):
 
 
 def emit_html(model, data):
-    print("<table border='1'>")
-    print("<tr><th>Model</th>", end="")
-    for c in COLUMNS:
-        print(f"<th>{escape(c)}</th>", end="")
-    print("</tr>")
-
     print(f"<tr><td>{escape(model)}</td>", end="")
     for c in COLUMNS:
         cell = "<br>".join(escape(x) for x in data[c]) or "&nbsp;"
         print(f"<td>{cell}</td>", end="")
     print("</tr>")
-
-    print("</table>")
 
 
 if __name__ == "__main__":
