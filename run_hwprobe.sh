@@ -27,7 +27,7 @@ echo "Running script..."
 cd "$TMPDIR"
 python "$REPO_DIR/main.py" "$TMPDIR"
 
-MAKER=$(kenv | grep '^smbios.system.product=' | cut -d'=' -f2 | tr -d '"' | tr '[:upper:]' '[:lower:]')
+MAKER=$(kenv | grep '^smbios.system.product=' | cut -d'=' -f2 | tr -d '"' | tr '[:upper:]' '[:lower:]' | sed 's/[^[:alnum:]]/_/g')
 if [ -z "$MAKER" ]; then
     echo "Error: Could not determine system product."
     exit 1
