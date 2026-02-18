@@ -50,6 +50,17 @@ table {
     border-collapse: collapse;
     font-family: sans-serif;
 }
+.laptop-ranking tr:nth-child(2){
+    color: #ffd700;
+}
+
+.laptop-ranking tr:nth-child(3){
+    color: #c0c0c0;
+}
+
+.laptop-ranking tr:nth-child(4){
+    color: #cd7f32;
+}
 
 th, td {
     padding: 15px 20px;
