@@ -69,7 +69,7 @@ def emit_html(model, ranking, data):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("usage: python hw_to_html.py <file>")
+        print("usage: python parse.py <file>")
         sys.exit(1)
 
     model, ranking, data = parse_file(sys.argv[1])
