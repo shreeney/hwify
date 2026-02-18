@@ -17,7 +17,9 @@
     font-size: 1.8rem;
     margin: 0; /* remove default h1 margin */
 }
-
+h3 {
+    text-align: center;
+}
 /* Ensure the page takes up the full height of the screen */
 html, body {
     height: 100%;
