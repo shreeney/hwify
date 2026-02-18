@@ -3,6 +3,7 @@ from pathlib import Path
 import re
 from datetime import datetime
 import subprocess
+import glob
 
 if len(sys.argv) >= 2:
     tmpdir = Path(sys.argv[1])
@@ -179,5 +180,31 @@ def get_cpuinfo():
     content = cpu_file.read()
     return content
 
+def output_all_rankings():
+    data_list = []
+    for filepath in glob.glob("**/*.txt", recursive=True):
+        try:
+            with open(filepath, 'r') as f:
+                content = f.read()
+                hw_match = re.search(r"Hardware:\s*(.*)", content)
+                score_match = re.search(r"Ranking:\s*(\d+)/", content)
 
-generate_hardware_summary(pciconf_path, hw_probe_dump, filename_final)
+                if hw_match and score_match:
+                    data_list.append({
+                        "name": hw_match.group(1).strip(),
+                        "score": int(score_match.group(1))
+                    })
+        except Exception:
+            continue
+
+    data_list.sort(key=lambda x: x['score'], reverse=True)
+
+    for item in data_list:
+        print(f"<tr><td>{item['name']}</td><td>{item['score']}</td></tr>")
+
+if len(sys.argv) >= 2 and sys.argv[1] == "--rank":
+    output_all_rankings()
+    sys.exit(0)
+
+if __name__ == "__main__":
+    generate_hardware_summary(pciconf_path, hw_probe_dump, filename_final)
