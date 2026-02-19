@@ -17,7 +17,21 @@
     font-size: 1.8rem;
     margin: 0; /* remove default h1 margin */
 }
+.blurb h3{
+    text-align: center;
+}
 h3 {
+    text-align: center;
+}
+.blurb p {
+    text-align: center;
+}
+
+ul {
+  display: inline-block; /* Makes the list width match the text */
+  text-align: left;      /* Keeps bullets next to the text */
+}
+.blurb {
     text-align: center;
 }
 /* Ensure the page takes up the full height of the screen */
