@@ -3,7 +3,7 @@ import re
 import glob
 from html import escape
 
-COLUMNS = ["Graphics", "Networking", "Audio", "Storage", "USB Ports", "Bluetooth"]
+COLUMNS = ["Graphics", "Networking", "Audio", "Storage", "USB Ports"]
 
 
 def get_rows():
