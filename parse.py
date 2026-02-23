@@ -39,9 +39,8 @@ def parse_file(path):
         line = line.rstrip()
         if line.startswith("Hardware:"):
             model = line.split("Hardware:", 1)[1].strip()
-        elif line.startswith("Ranking:"):
-            ranking = line.split("Ranking:", 1)[1].strip()
-
+        elif line.startswith("Score:"):
+            ranking = line.split("Score:", 1)[1].strip()
         m = re.match(r"-\s+(.+)", line)
         if m:
             section = m.group(1)
